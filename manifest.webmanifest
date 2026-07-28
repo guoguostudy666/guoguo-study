@@ -1,0 +1,32 @@
+{
+  "name": "果果Study工作台（1~6年级）",
+  "short_name": "果果Study",
+  "description": "面向河北省小学 1~6 年级的每日全科学习工作台，可独立完成语数外学习与测验",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f3f8",
+  "theme_color": "#5856d6",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
