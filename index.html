@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>果果Study工作台（1~6年级）</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="果果Study">
+  <meta name="theme-color" content="#5856d6">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <style>
+    :root {
+      --primary: #5856d6;
+      --primary-light: #7a78e0;
+      --primary-dark: #4644b8;
+      --success: #34c759;
+      --danger: #ff3b30;
+      --warn: #ff9500;
+      --bg: #f2f3f8;
+      --card-bg: #ffffff;
+      --text: #1c1c1e;
+      --text-secondary: #8e8e93;
+      --border: #e5e5ea;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 8px 30px rgba(88, 86, 214, 0.18);
+      --radius: 16px;
+      --sidebar-width: 220px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      height:100%; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background:var(--bg); color:var(--text); overflow:hidden;
+    }
+    .app { display:flex; width:100%; height:100%; }
+
+    /* 侧边栏 */
+    .sidebar {
+      width:var(--sidebar-width); min-width:var(--sidebar-width);
+      background:linear-gradient(180deg,#5856d6 0%,#6b69e0 100%);
+      display:flex; flex-direction:column; padding:24px 0;
+      box-shadow:4px 0 20px rgba(88,86,214,0.2); z-index:100;
+    }
+    .sidebar-brand { display:flex; align-items:center; gap:10px; padding:0 20px 24px; color:#fff; font-size:18px; font-weight:700; }
+    .sidebar-brand .icon { width:36px; height:36px; background:rgba(255,255,255,0.2); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+    .nav-menu { flex:1; overflow-y:auto; padding:0 12px; }
+    .nav-item { display:flex; align-items:center; gap:12px; padding:14px; margin-bottom:6px; border-radius:14px; color:rgba(255,255,255,0.85); font-size:14px; font-weight:500; cursor:pointer; transition:all .2s; position:relative; }
+    .nav-item:hover { background:rgba(255,255,255,0.12); color:#fff; }
+    .nav-item.active { background:rgba(255,255,255,0.22); color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+    .nav-item.active::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:4px; height:22px; background:#fff; border-radius:0 4px 4px 0; }
+    .nav-icon { width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:18px; background:rgba(255,255,255,0.12); border-radius:10px; }
+    .sidebar-footer { padding:16px 20px 0; color:rgba(255,255,255,0.55); font-size:12px; text-align:center; }
+
+    /* 主区 */
+    .main { flex:1; display:flex; flex-direction:column; min-width:0; position:relative; }
+    .main-header { display:flex; align-items:center; gap:12px; padding:18px 28px; background:var(--card-bg); border-bottom:1px solid var(--border); box-shadow:0 1px 8px rgba(0,0,0,0.03); }
+    .back-btn { display:flex; align-items:center; gap:4px; color:var(--primary); font-size:15px; font-weight:600; cursor:pointer; padding:6px 10px; border-radius:10px; }
+    .back-btn:hover { background:rgba(88,86,214,0.08); }
+    .page-title { font-size:20px; font-weight:700; }
+    .install-btn { margin-left:auto; padding:8px 16px; background:var(--primary); color:#fff; border:none; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; box-shadow:var(--shadow); }
+    .install-btn:hover { background:var(--primary-dark); }
+    .main-scroll { flex:1; overflow-y:auto; padding:24px 28px 100px; }
+
+    /* 年级选择器 */
+    .grade-bar { display:flex; align-items:center; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+    .grade-bar .label { font-size:13px; color:var(--text-secondary); font-weight:600; margin-right:4px; }
+    .grade-btn { padding:7px 13px; border-radius:20px; border:1.5px solid var(--border); background:#fff; font-size:13px; font-weight:700; color:var(--text-secondary); cursor:pointer; transition:all .2s; }
+    .grade-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+
+    /* 学科标签 */
+    .subject-tabs { display:flex; gap:12px; margin-bottom:20px; }
+    .subject-tab { flex:1; padding:14px; background:var(--card-bg); border:2px solid transparent; border-radius:var(--radius); text-align:center; cursor:pointer; box-shadow:var(--shadow); transition:all .2s; }
+    .subject-tab:hover { transform:translateY(-2px); }
+    .subject-tab.active { border-color:var(--primary); background:linear-gradient(135deg,#fff 0%,#f7f7ff 100%); }
+    .subject-tab .emoji { font-size:26px; display:block; margin-bottom:6px; }
+    .subject-tab .label { font-size:15px; font-weight:700; }
+
+    /* 学科卡片 */
+    .subject-card { background:var(--card-bg); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); margin-bottom:20px; display:flex; align-items:center; gap:18px; }
+    .subject-icon { width:64px; height:64px; border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:32px; flex-shrink:0; }
+    .subject-icon.chinese { background:linear-gradient(135deg,#fff5f0 0%,#ffe8dd 100%); }
+    .subject-icon.math { background:linear-gradient(135deg,#f0f7ff 0%,#ddeeff 100%); }
+    .subject-icon.english { background:linear-gradient(135deg,#fff8e1 0%,#ffecb3 100%); }
+    .subject-info { flex:1; min-width:0; }
+    .subject-name { font-size:22px; font-weight:800; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+    .speak-btn { width:28px; height:28px; border-radius:50%; border:none; background:var(--primary); color:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+    .speak-btn:hover { transform:scale(1.08); }
+    .subject-subtitle { font-size:13px; color:var(--text-secondary); margin-bottom:10px; }
+    .progress-bar { height:8px; background:#e5e5ea; border-radius:4px; overflow:hidden; }
+    .progress-fill { height:100%; background:linear-gradient(90deg,#5856d6 0%,#7a78e0 100%); border-radius:4px; transition:width .4s; }
+    .progress-text { font-size:12px; color:var(--text-secondary); margin-top:6px; text-align:right; }
+
+    .section-title { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .section-title h2 { font-size:18px; font-weight:800; }
+    .task-count { background:rgba(88,86,214,0.1); color:var(--primary); padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700; }
+
+    .task-list { display:flex; flex-direction:column; gap:12px; }
+    .task-item { background:var(--card-bg); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow); display:flex; align-items:center; gap:14px; cursor:pointer; transition:all .2s; animation:slideIn .3s; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+    .task-item:hover { transform:translateY(-1px); box-shadow:0 6px 24px rgba(0,0,0,0.08); }
+    .task-checkbox { width:28px; height:28px; border-radius:50%; border:2.5px solid #d1d1d6; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .2s; color:#fff; font-size:14px; }
+    .task-item.completed .task-checkbox { background:var(--success); border-color:var(--success); }
+    .task-item.completed .task-name { color:var(--text-secondary); text-decoration:line-through; }
+    .task-content { flex:1; min-width:0; }
+    .task-name { font-size:15px; font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+    .task-meta { display:flex; align-items:center; gap:12px; font-size:12px; color:var(--text-secondary); }
+    .streak { display:inline-flex; align-items:center; gap:3px; color:var(--warn); font-weight:700; }
+    .done-badge { color:var(--success); font-weight:700; }
+    .task-enter { color:var(--primary); font-size:13px; font-weight:700; flex-shrink:0; }
+
+    /* 子页面 */
+    .detail-head { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+    .detail-back { display:flex; align-items:center; gap:4px; color:var(--primary); font-weight:700; cursor:pointer; padding:6px 10px; border-radius:10px; }
+    .detail-back:hover { background:rgba(88,86,214,0.08); }
+    .detail-title { font-size:20px; font-weight:800; }
+    .card-box { background:var(--card-bg); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); margin-bottom:16px; }
+    .card-box h3 { font-size:16px; font-weight:800; margin-bottom:12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .h-tag { display:inline-block; background:rgba(88,86,214,0.1); color:var(--primary); font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; margin-bottom:10px; }
+    .poem-line { font-size:18px; line-height:1.9; font-weight:600; text-align:center; }
+    .poem-meta { text-align:center; color:var(--text-secondary); font-size:13px; margin:8px 0 14px; }
+    .meaning { background:#f9f9fb; border-radius:12px; padding:14px; font-size:14px; line-height:1.7; color:#444; }
+    .idiom-name { font-size:18px; font-weight:800; color:var(--primary); margin-bottom:6px; }
+    .idiom-story { font-size:14px; line-height:1.8; color:#444; margin-bottom:8px; }
+    .idiom-mean { font-size:14px; color:var(--warn); font-weight:700; }
+    .write-char { display:inline-flex; flex-direction:column; align-items:center; margin:6px; }
+    .write-char { display:inline-flex; flex-direction:column; align-items:center; margin:8px; }
+    .write-char .big { font-size:48px; font-weight:700; color:var(--primary); width:72px; height:72px; line-height:1; border:2px solid #c7c7cc; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#fff; text-align:center; overflow:hidden; }
+    .tianzi { background-color:#fff; background-image: linear-gradient(to right, transparent calc(50% - .5px), rgba(230,90,90,.5) 50%, transparent calc(50% + .5px)), linear-gradient(to bottom, transparent calc(50% - .5px), rgba(230,90,90,.5) 50%, transparent calc(50% + .5px)); }
+    .sixtian { background-image: linear-gradient(to bottom, transparent 15px, rgba(230,90,90,.5) 15px, rgba(230,90,90,.5) 16px, transparent 16px, transparent 31px, rgba(230,90,90,.5) 31px, rgba(230,90,90,.5) 32px, transparent 32px, transparent 47px); background-color:#fff; }
+    .write-char .pinyin { font-size:12px; color:var(--text-secondary); margin-top:4px; }
+    .write-pinyin { width:72px; height:48px; border:1.5px solid #c7c7cc; border-radius:8px; background-color:#fff; background-image: repeating-linear-gradient(to bottom, rgba(230,90,90,.5) 0 1px, transparent 1px 15px); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; color:#444; margin-bottom:6px; letter-spacing:1px; }
+    /* 控笔训练：田字格示范字（供孩子参考占格）+ 空白练习格 */
+    .tianzi-model .tianzi-char { color:var(--primary); }
+    /* 英语四线三格（字母/音标书写） */
+    .en-rule { width:74px; height:98px; border:1.5px solid #9bbcd9; border-radius:8px; background:#fff; background-image: repeating-linear-gradient(to bottom, rgba(40,120,200,.4) 0 1px, transparent 1px 24px); display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:18px; overflow:hidden; }
+    .en-rule .en-big { font-size:32px; font-weight:800; line-height:1; color:var(--primary); }
+    .en-rule .en-small { font-size:22px; font-weight:700; line-height:1; color:var(--text); margin-top:2px; }
+    .q-explain .speak-btn { width:22px; height:22px; font-size:11px; margin-left:6px; vertical-align:middle; }
+    .pinyin-card { display:inline-flex; flex-direction:column; align-items:center; min-width:110px; padding:16px 12px; background:#f9f9fb; border-radius:14px; margin:6px; flex:1; }
+    .pinyin-card .py { font-size:26px; font-weight:700; color:var(--primary); letter-spacing:2px; }
+    .pinyin-card .py-zh { font-size:30px; font-weight:800; color:var(--text); margin-top:8px; }
+    .solution-box { background:#f9f9fb; border-radius:12px; padding:14px; margin-top:10px; }
+    .solution-content { display:none; margin-top:10px; }
+    .solution-content.show { display:block; }
+    .solution-btn { display:inline-block; padding:8px 16px; background:var(--primary); color:#fff; border:none; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; }
+    .solution-btn:hover { background:var(--primary-dark); }
+    .pic-box { text-align:center; font-size:80px; padding:20px; background:#f9f9fb; border-radius:12px; margin-bottom:12px; }
+    .pic-scene { position:relative; height:240px; border-radius:14px; overflow:hidden; margin-bottom:12px; box-shadow:0 6px 18px rgba(0,0,0,.08); }
+    .pic-scene-bg { position:absolute; inset:0; width:100%; height:100%; }
+    .pic-emoji { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:74px; letter-spacing:8px; filter:drop-shadow(0 5px 7px rgba(0,0,0,.18)); }
+    .pic-prompt { font-size:15px; line-height:1.8; color:#333; }
+    .pic-sample { font-size:13px; color:var(--text-secondary); line-height:1.7; margin-top:10px; border-left:3px solid var(--primary); padding-left:12px; }
+
+    /* 题目 */
+    .q-item { background:var(--card-bg); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); margin-bottom:14px; }
+    .q-num { font-weight:800; color:var(--primary); margin-right:8px; }
+    .q-text { font-size:16px; font-weight:600; margin-bottom:12px; line-height:1.6; display:flex; align-items:flex-start; gap:6px; flex-wrap:wrap; }
+    .q-body { flex:1; min-width:140px; }
+    .q-options { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+    .opt { padding:9px 16px; background:#f9f9fb; border:1.5px solid var(--border); border-radius:20px; font-size:14px; cursor:pointer; transition:all .2s; }
+    .opt:hover { border-color:var(--primary); color:var(--primary); }
+    .opt.correct { background:rgba(52,199,89,0.12); border-color:var(--success); color:var(--success); font-weight:700; }
+    .opt.wrong { background:rgba(255,59,48,0.08); border-color:var(--danger); color:var(--danger); }
+    .opt:disabled { cursor:default; }
+    .opt-lab { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; margin-right:8px; border-radius:50%; background:var(--primary); color:#fff; font-size:11px; font-weight:700; flex-shrink:0; }
+    .q-explain { font-size:13px; color:var(--text-secondary); background:#f9f9fb; border-radius:10px; padding:10px 12px; margin-top:6px; display:none; line-height:1.7; }
+    .q-explain.show { display:block; }
+    .q-explain b { color:var(--primary); }
+    .explain-btn { font-size:13px; color:var(--primary); cursor:pointer; font-weight:700; display:inline-block; margin-top:4px; }
+    .q-audio { display:inline-flex; align-items:center; gap:6px; }
+
+    /* 英语 */
+    .en-word { display:flex; align-items:center; justify-content:space-between; padding:14px; background:#f9f9fb; border-radius:12px; margin-bottom:12px; gap:10px; flex-wrap:wrap; }
+    .en-text { font-size:18px; font-weight:700; color:var(--primary); }
+    .en-phon { font-size:13px; color:var(--text-secondary); }
+    .en-mean { font-size:13px; color:#444; margin-top:2px; }
+    .en-btns { display:flex; gap:8px; flex-shrink:0; }
+    .mic-btn { background:#fff; border:1.5px solid var(--primary); color:var(--primary); border-radius:50%; width:34px; height:34px; cursor:pointer; }
+    .mic-btn.recording { background:var(--primary); color:#fff; animation:pulse 1.2s infinite; }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(88,86,214,0.4);} 50%{box-shadow:0 0 0 8px rgba(88,86,214,0);} }
+    .repeat-fb { font-size:12px; min-height:16px; margin-top:6px; }
+    .repeat-fb.good { color:var(--success); } .repeat-fb.try { color:var(--warn); }
+
+    /* 植物大战 */
+    .game-lawn { background:linear-gradient(180deg,#d8f3d8 0%,#aee6ae 100%); border-radius:var(--radius); padding:16px; min-height:200px; position:relative; overflow:hidden; }
+    .zombie { font-size:40px; transition:left .4s, bottom .4s; position:absolute; }
+    .life { font-size:22px; letter-spacing:2px; }
+    .game-msg { text-align:center; font-size:16px; font-weight:700; margin-top:12px; }
+    #rabbit { animation: rabbitHop 1.05s ease-in-out infinite; transform-origin:bottom center; }
+    @keyframes rabbitHop { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-7px);} }
+
+    /* 奖励 / 统计 / 错题 */
+    .reward-grid { display:flex; flex-wrap:wrap; gap:14px; }
+    .reward-card { background:var(--card-bg); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); text-align:center; width:130px; }
+    .reward-card .emoji { font-size:42px; }
+    .reward-card .t { font-size:13px; font-weight:700; margin-top:6px; }
+    .reward-card .d { font-size:11px; color:var(--text-secondary); }
+    .stat-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:10px; }
+    .stat-day { aspect-ratio:1; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; background:#eef0f5; color:var(--text-secondary); }
+    .stat-day.done { background:var(--primary); color:#fff; }
+    .stat-day.today { outline:2px solid var(--warn); }
+    .stat-wk { font-size:10px; color:var(--text-secondary); text-align:center; margin-bottom:2px; }
+    .stat-cards { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:18px; }
+    .stat-num { background:var(--card-bg); border-radius:var(--radius); padding:18px 22px; box-shadow:var(--shadow); flex:1; min-width:120px; text-align:center; }
+    .stat-num .n { font-size:30px; font-weight:800; color:var(--primary); }
+    .stat-num .l { font-size:12px; color:var(--text-secondary); }
+    .wb-item { background:var(--card-bg); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow); margin-bottom:12px; border-left:4px solid var(--danger); }
+    .wb-q { font-size:15px; font-weight:600; margin-bottom:6px; }
+    .wb-a { font-size:13px; color:var(--danger); }
+    .wb-c { font-size:13px; color:var(--success); }
+    .wb-meta { font-size:11px; color:var(--text-secondary); margin-top:6px; }
+    .wb-del { font-size:12px; color:var(--primary); cursor:pointer; font-weight:700; float:right; }
+
+    .fab { position:fixed; right:36px; bottom:36px; width:58px; height:58px; border-radius:50%; background:var(--primary); color:#fff; border:none; font-size:28px; cursor:pointer; box-shadow:var(--shadow-lg); display:flex; align-items:center; justify-content:center; z-index:90; }
+    .fab:hover { transform:scale(1.06); background:var(--primary-dark); }
+    .empty-state { text-align:center; padding:40px 20px; color:var(--text-secondary); }
+    .empty-state .emoji { font-size:48px; margin-bottom:12px; }
+    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-80px); background:rgba(28,28,30,0.92); color:#fff; padding:12px 22px; border-radius:24px; font-size:14px; z-index:300; opacity:0; transition:all .3s; pointer-events:none; }
+    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+    .mobile-menu-btn { display:none; position:fixed; top:16px; left:16px; z-index:110; width:40px; height:40px; border-radius:50%; background:var(--primary); color:#fff; border:none; align-items:center; justify-content:center; font-size:18px; cursor:pointer; box-shadow:var(--shadow-lg); }
+    .sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:95; }
+
+    /* 同步 / todo */
+    .sync-btn { padding:9px 16px; background:var(--primary); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; }
+    .sync-btn:hover { background:var(--primary-dark); }
+    .sync-btn.ghost { background:#f2f2f7; color:var(--text); }
+
+    @media (max-width:768px) {
+      .sidebar { position:fixed; left:-220px; top:0; bottom:0; transition:left .3s; }
+      .sidebar.open { left:0; }
+      .sidebar-backdrop.show { display:block; }
+      .mobile-menu-btn { display:flex; }
+      .main-header { padding:14px 16px; padding-left:58px; }
+      .main-scroll { padding:16px 16px 90px; }
+      .subject-tabs { gap:8px; } .subject-tab { padding:12px 8px; }
+      .fab { right:20px; bottom:20px; width:54px; height:54px; }
+      .stat-grid { gap:4px; }
+    }
+    @media (min-width:769px) { .main-header { position:sticky; top:0; z-index:50; } }
+    .placeholder-page { display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; text-align:center; color:var(--text-secondary); padding:40px; }
+    .placeholder-page.active { display:flex; }
+    .placeholder-page .big-emoji { font-size:80px; margin-bottom:20px; }
+    .placeholder-page h2 { color:var(--text); margin-bottom:10px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand"><span class="icon"><img src="icon.svg" alt="logo" style="width:26px;height:26px;display:block;"></span><span>果果Study工作台</span></div>
+      <nav class="nav-menu">
+        <div class="nav-item active" data-page="study" onclick="switchPage('study')"><span class="nav-icon">📚</span><span>每日一练<br><small style="opacity:.7">（1~6年级）</small></span></div>
+        <div class="nav-item" data-page="errors" onclick="switchPage('errors')"><span class="nav-icon">📝</span><span>错题本</span></div>
+        <div class="nav-item" data-page="plants" onclick="switchPage('plants')"><span class="nav-icon">🎮</span><span>学习小游戏</span></div>
+        <div class="nav-item" data-page="rewards" onclick="switchPage('rewards')"><span class="nav-icon">🎁</span><span>奖励中心</span></div>
+        <div class="nav-item" data-page="english" onclick="switchPage('english')"><span class="nav-icon">🔤</span><span>英语每日听</span></div>
+        <div class="nav-item" data-page="brain" onclick="switchPage('brain')"><span class="nav-icon">🧠</span><span>脑筋急转弯</span></div>
+        <div class="nav-item" data-page="science" onclick="switchPage('science')"><span class="nav-icon">🔬</span><span>科学小实验</span></div>
+        <div class="nav-item" data-page="stats" onclick="switchPage('stats')"><span class="nav-icon">📊</span><span>打卡统计</span></div>
+        <div class="nav-item" data-page="plans" onclick="switchPage('plans')"><span class="nav-icon">📌</span><span>近期计划</span></div>
+      </nav>
+      <div class="sidebar-footer">本地保存 · 云端可同步</div>
+    </aside>
+
+    <main class="main" id="main">
+      <div class="main-header">
+        <div class="back-btn" onclick="goBack()"><span>‹</span><span>返回</span></div>
+        <h1 class="page-title" id="page-title">每日一练</h1>
+        <button class="install-btn" id="install-btn" onclick="installApp()" style="display:none">⬇ 安装到桌面</button>
+      </div>
+
+      <!-- 学习主页 -->
+      <div class="main-scroll" id="study-page">
+        <div id="study-home"></div>
+        <div id="task-detail" style="display:none"></div>
+      </div>
+
+      <div class="placeholder-page" id="page-errors"><div class="big-emoji">📝</div><h2>错题本</h2><p>答题错误的题目会自动汇总到这里，供复习巩固。</p></div>
+      <div class="placeholder-page" id="page-plants"><div class="big-emoji">🎮</div><h2>学习小游戏</h2><p>用语文、数学、英语题目闯关的小游戏。</p></div>
+      <div class="placeholder-page" id="page-rewards"><div class="big-emoji">🎁</div><h2>奖励中心</h2><p>每日任务全部完成且全对，即可获得奖励。</p></div>
+      <div class="placeholder-page" id="page-stats"><div class="big-emoji">📊</div><h2>打卡统计</h2><p>查看本月打卡月报与连续天数。</p></div>
+      <div class="placeholder-page" id="page-english"><div class="big-emoji">🔤</div><h2>英语每日听</h2><p>听力为主 · 跟读 · 口语练习。</p></div>
+      <div class="placeholder-page" id="page-brain"><div class="big-emoji">🧠</div><h2>脑筋急转弯</h2><p>每天两个趣味小谜题，动动脑筋点一点答案。</p></div>
+      <div class="placeholder-page" id="page-science"><div class="big-emoji">🔬</div><h2>科学小实验</h2><p>每天一个简易小实验，年级越高越有挑战，原理解析可点 🔊 听。</p></div>
+      <div class="placeholder-page" id="page-plans"><div class="big-emoji">📌</div><h2>近期计划</h2><p>制定阶段学习目标与复习安排。</p></div>
+    </main>
+  </div>
+
+  <button class="fab" id="fab" onclick="openAddModal()">+</button>
+
+  <div class="modal-overlay" id="modal-overlay" onclick="closeAddModal(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center;">
+    <div class="modal" onclick="event.stopPropagation()" style="background:var(--card-bg);border-radius:var(--radius);width:90%;max-width:420px;padding:24px;box-shadow:var(--shadow-lg);">
+      <div style="font-size:18px;font-weight:800;margin-bottom:16px;">添加新任务</div>
+      <input type="text" id="new-task-input" placeholder="输入学习任务名称..." onkeydown="if(event.key==='Enter')confirmAddTask()" style="width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;margin-bottom:18px;font-family:inherit;outline:none;">
+      <div style="display:flex;gap:12px;justify-content:flex-end;">
+        <button onclick="closeAddModal()" style="padding:11px 22px;border-radius:12px;border:none;background:#f2f2f7;color:var(--text);font-size:15px;font-weight:600;cursor:pointer;">取消</button>
+        <button onclick="confirmAddTask()" style="padding:11px 22px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-size:15px;font-weight:600;cursor:pointer;">添加</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===================== 配置 =====================
+    const SUBJECTS = {
+      chinese: {
+        name:'语文', emoji:'📖', subtitle:'每日30分钟 提升语感', colorClass:'chinese', voiceLang:'zh-CN',
+        tasks:[
+          {name:'古诗学习', type:'poem'},
+          {name:'成语故事 / 好词好句', type:'idiom'},
+          {name:'控笔训练 + 写字', type:'writing'},
+          {name:'拼音拼读及练习题', type:'pinyin'},
+          {name:'看图写话', type:'picture'},
+          {name:'语文拓展（每日一题）', type:'cn_extra'}
+        ]
+      },
+      math: {
+        name:'数学', emoji:'🔢', subtitle:'每日25分钟 夯实思维', colorClass:'math', voiceLang:'zh-CN',
+        tasks:[
+          {name:'口算天天练', type:'math_oral'},
+          {name:'同步练习册（教材+题型）', type:'math_sync'},
+          {name:'数学思维小题', type:'math_think'},
+          {name:'错题订正', type:'math_wrong'},
+          {name:'生活中的数学', type:'math_life'},
+          {name:'奥数思维（每日一题）', type:'math_olympiad'}
+        ]
+      },
+      english: {
+        name:'英语', emoji:'🔠', subtitle:'每日二十分钟 听说读写（主攻听力）', colorClass:'english', voiceLang:'en-US',
+        tasks:[
+          {name:'单词跟读（拼读）', type:'en_word'},
+          {name:'课文听读（教材+题型）', type:'en_text'},
+          {name:'字母 / 音标书写', type:'en_write'},
+          {name:'句型拼读练习', type:'en_pattern'},
+          {name:'自然拼读教学', type:'en_phonics'},
+          {name:'英语朗读 / 情景对话', type:'en_read'},
+          {name:'英语拓展（每日一题）', type:'en_extra'}
+        ]
+      }
+    };
+
+    // 学科 key → 中文名（用于错题本 / 奖励中心统一口径）
+    const SUBJ_CN = { chinese:'语文', math:'数学', english:'英语' };
+
+    // ===================== 内容库（按年级递进，题库已扩充） =====================
+    const POEMS = {
+      1:[{t:'咏鹅',a:'骆宾王',d:'唐',lines:['鹅，鹅，鹅，','曲项向天歌。','白毛浮绿水，','红掌拨清波。'],m:'这是骆宾王七岁时写的诗。诗人用简单的几笔，画出白鹅在水中弯曲脖子唱歌、红脚掌拨水的可爱样子，表达了对白鹅的喜爱。重点词：曲项（弯弯的脖子）、拨（划动）。'},
+         {t:'静夜思',a:'李白',d:'唐',lines:['床前明月光，','疑是地上霜。','举头望明月，','低头思故乡。'],m:'夜晚睡不着，看到地上的月光，忍不住抬头望月，低下头思念远方的家乡。这是写“思乡”最著名的诗。重点：疑（好像）、举头（抬头）、思（想念）。'},
+         {t:'悯农',a:'李绅',d:'唐',lines:['锄禾日当午，','汗滴禾下土。','谁知盘中餐，','粒粒皆辛苦。'],m:'农民中午顶着太阳种地，汗水滴进土里。诗人提醒我们要爱惜每一粒粮食，因为它们都来之不易。重点：悯（同情、怜悯）、锄禾（种地）、皆（都）。'},
+         {t:'风',a:'李峤',d:'唐',lines:['解落三秋叶，','能开二月花。','过江千尺浪，','入竹万竿斜。'],m:'风能吹落秋天的树叶，能吹开早春的花，刮过江面掀起千尺浪，吹进竹林让竹子倾斜。诗人用四个画面写出了风的力量和变化。'},
+         {t:'春晓',a:'孟浩然',d:'唐',lines:['春眠不觉晓，','处处闻啼鸟。','夜来风雨声，','花落知多少。'],m:'春天睡得香，醒来到处是鸟叫；想起昨夜的风雨，不知吹落了多少花儿。表达了诗人对春天的喜爱和对落花的怜惜。重点：晓（早晨）、闻（听见）。'}],
+      2:[{t:'村居',a:'高鼎',d:'清',lines:['草长莺飞二月天，','拂堤杨柳醉春烟。','儿童散学归来早，','忙趁东风放纸鸢。'],m:'早春二月草绿莺飞，杨柳轻拂堤岸，像陶醉在春天的烟雾里。孩子们放学早，赶忙趁着春风去放风筝。画面充满童趣。重点：纸鸢（风筝）。'},
+         {t:'所见',a:'袁枚',d:'清',lines:['牧童骑黄牛，','歌声振林樾。','意欲捕鸣蝉，','忽然闭口立。'],m:'小牧童骑黄牛唱着歌，忽然想捉树上鸣叫的蝉，立刻闭嘴屏息站住。写出了孩子天真活泼、专注可爱的样子。重点：意欲（想要）、立（站住）。'},
+         {t:'小池',a:'杨万里',d:'宋',lines:['泉眼无声惜细流，','树阴照水爱晴柔。','小荷才露尖尖角，','早有蜻蜓立上头。'],m:'泉眼悄悄流淌，树影映水。小荷叶刚露出尖角，已有蜻蜓停在上面。诗人抓住初夏小池的细腻美景，充满生机。重点：惜（爱惜）、晴柔（晴天柔和的景色）。'},
+         {t:'赋得古原草送别',a:'白居易',d:'唐',lines:['离离原上草，','一岁一枯荣。','野火烧不尽，','春风吹又生。'],m:'原野上的草年年枯荣。野火也烧不完它，春风一吹又重新生长。诗人借草的顽强表达送别的不舍与希望。重点：离离（茂盛的样子）、荣（茂盛）。'}],
+      3:[{t:'山行',a:'杜牧',d:'唐',lines:['远上寒山石径斜，','白云生处有人家。','停车坐爱枫林晚，','霜叶红于二月花。'],m:'沿着弯弯石路上山，白云深处有人家。傍晚停车只因爱这枫林，经霜的红叶比春花还艳。写出了秋天山林的红艳之美。重点：坐（因为）、于（比）。'},
+         {t:'赠汪伦',a:'李白',d:'唐',lines:['李白乘舟将欲行，','忽闻岸上踏歌声。','桃花潭水深千尺，','不及汪伦送我情。'],m:'李白乘船正要走，忽然听到岸上汪伦踏歌送行。桃花潭水虽有千尺深，也比不上朋友送别的情意。这是一首送别诗，歌颂友谊。重点：闻（听见）、不及（比不上）。'},
+         {t:'小儿垂钓',a:'胡令能',d:'唐',lines:['蓬头稚子学垂纶，','侧坐莓苔草映身。','路人借问遥招手，','怕得鱼惊不应人。'],m:'头发蓬乱的小孩学着钓鱼，侧身坐在草丛。路人问路他远远摆手，怕惊跑鱼儿不敢出声。生动地写出孩子专注钓鱼的可爱模样。重点：垂纶（钓鱼）、遥（远远地）。'},
+         {t:'望庐山瀑布',a:'李白',d:'唐',lines:['日照香炉生紫烟，','遥看瀑布挂前川。','飞流直下三千尺，','疑是银河落九天。'],m:'阳光照香炉峰生起紫烟，远望瀑布像挂着白练。水流直下三千尺，让人怀疑是银河从天上落下。用夸张写出瀑布的雄伟壮观。重点：川（河流）、疑（怀疑）。'}],
+      4:[{t:'题西林壁',a:'苏轼',d:'宋',lines:['横看成岭侧成峰，','远近高低各不同。','不识庐山真面目，','只缘身在此山中。'],m:'横看是岭侧看是峰，远近高低各不相同。看不清庐山真面貌，只因为自己就在山中。说明看问题要全面，不能只从一个角度看。重点：缘（因为）。'},
+         {t:'游山西村',a:'陆游',d:'宋',lines:['莫笑农家腊酒浑，','丰年留客足鸡豚。','山重水复疑无路，','柳暗花明又一村。'],m:'不要笑农家酒浑，丰收年待客菜肴丰盛。山水曲折似无路，忽见柳绿花红又是一村。比喻困境中也有希望，事情会有转机。重点：浑（浑浊）、豚（小猪，指肉）。'},
+         {t:'黄鹤楼送孟浩然之广陵',a:'李白',d:'唐',lines:['故人西辞黄鹤楼，','烟花三月下扬州。','孤帆远影碧空尽，','唯见长江天际流。'],m:'老友在黄鹤楼辞别，三月顺流去扬州。孤帆远影消失天边，只看见长江向天际奔流。表达了送别时依依不舍的深情。重点：辞（告别）、唯（只）。'},
+         {t:'绝句',a:'杜甫',d:'唐',lines:['两个黄鹂鸣翠柳，','一行白鹭上青天。','窗含西岭千秋雪，','门泊东吴万里船。'],m:'两只黄鹂在翠柳间鸣叫，一行白鹭飞上蓝天。窗口映着西岭千年积雪，门外停着远航东吴的船。四句写了四种明丽景色，色彩鲜明，充满生机。'}],
+      5:[{t:'泊船瓜洲',a:'王安石',d:'宋',lines:['京口瓜洲一水间，','钟山只隔数重山。','春风又绿江南岸，','明月何时照我还。'],m:'京口与瓜洲只隔一条江，钟山也只隔几座山。春风又吹绿江南，明月何时照我回乡？表达了对家乡的思念。重点：绿（这里作动词，吹绿）、还（回）。'},
+         {t:'秋思',a:'张籍',d:'唐',lines:['洛阳城里见秋风，','欲作家书意万重。','复恐匆匆说不尽，','行人临发又开封。'],m:'洛阳城里起了秋风，想写家信心意万千。又怕匆忙写不尽，送信人要走时又拆开再看。把游子思乡写得细腻真切。重点：意万重（心意很多）、开封（拆开信封）。'},
+         {t:'长相思',a:'纳兰性德',d:'清',lines:['山一程，水一程，','身向榆关那畔行，','夜深千帐灯。','风一更，雪一更，','聒碎乡心梦不成，','故园无此声。'],m:'翻山涉水向山海关进发，夜深军帐灯火千点。风雪交加搅碎思乡梦，故乡可没有这样的声音。写出了征人思乡的孤寂。重点：聒（声音嘈杂，打扰）。'},
+         {t:'示儿',a:'陆游',d:'宋',lines:['死去元知万事空，','但悲不见九州同。','王师北定中原日，','家祭无忘告乃翁。'],m:'本知死后万事皆空，只悲没见到国家统一。等到朝廷收复中原那天，家祭时别忘了告诉父亲。这是陆游临终的爱国绝笔。重点：元（本来）、乃翁（你的父亲）。'}],
+      6:[{t:'石灰吟',a:'于谦',d:'明',lines:['千锤万凿出深山，','烈火焚烧若等闲。','粉骨碎身浑不怕，','要留清白在人间。'],m:'石灰经千锤万凿、烈火焚烧都不怕，哪怕粉身碎骨，也要把清白留在人间。诗人借石灰比喻自己坚守高洁、不怕牺牲的品格。重点：若等闲（好像很平常）、清白（比喻高尚品格）。'},
+         {t:'竹石',a:'郑燮',d:'清',lines:['咬定青山不放松，','立根原在破岩中。','千磨万击还坚劲，','任尔东西南北风。'],m:'竹子牢牢扎根青山破岩中，任凭千磨万击、四面风雨，依旧坚韧挺立。赞美竹子顽强不屈的精神，也是诗人的自我写照。重点：坚劲（坚韧有力）、任（任凭）。'},
+         {t:'己亥杂诗',a:'龚自珍',d:'清',lines:['九州生气恃风雷，','万马齐喑究可哀。','我劝天公重抖擞，','不拘一格降人才。'],m:'国家生机靠风雷激荡，万马齐喑令人悲哀。我劝上天重新振作，不拘一格降下大批人才。表达了变革图强、重视人才的愿望。重点：恃（依靠）、喑（沉默）。'},
+         {t:'夏日绝句',a:'李清照',d:'宋',lines:['生当作人杰，','死亦为鬼雄。','至今思项羽，','不肯过江东。'],m:'活着要做人中豪杰，死了也要做鬼中英雄。至今还怀念项羽，因他不肯苟且回到江东。借项羽赞颂英雄气概，也暗含对南宋朝廷的批评。重点：人杰（人中豪杰）、江东（江南）。'}]
+    };
+    const IDIOMS = {
+      1:[{n:'画蛇添足',s:'有人画完蛇，又给蛇添上脚，结果反而输了。',m:'比喻做了多余的事，不但没有好处，反而把事情弄糟。告诉我们在做事时要恰到好处，不要多此一举。'},
+         {n:'守株待兔',s:'农夫偶然看到兔子撞死在树桩上，便天天守着树桩等兔子，荒废了田地。',m:'比喻不知变通、妄想不劳而获。提醒我们：收获要靠努力，不能总想着碰运气、坐享其成。'},
+         {n:'亡羊补牢',s:'羊圈破了丢了羊，才去修补羊圈，还不算晚。',m:'比喻出了问题及时补救，可以防止继续受损失。常和“未为晚也”连用，意思是现在改正还来得及。'}],
+      2:[{n:'愚公移山',s:'愚公带领家人天天挖山不止，最终感动天帝把山移走。',m:'比喻做事只要有恒心、坚持不懈，就能成功。鼓励我们不怕困难，长期坚持。'},
+         {n:'掩耳盗铃',s:'小偷想偷铃铛，捂住自己的耳朵，以为别人就听不见了。',m:'比喻自己欺骗自己，明明掩盖不住的事偏要设法掩盖。警示我们不要自欺欺人。'},
+         {n:'闻鸡起舞',s:'祖逖听到公鸡啼叫就起身练武，长年不辍。',m:'比喻志士及时奋发、刻苦自励。形容人胸怀大志，抓紧时间努力锻炼自己。'}],
+      3:[{n:'胸有成竹',s:'文与可画竹子前，心里已经有了完整的竹子形象。',m:'比喻做事之前已有通盘的考虑和把握。说明准备充分、心里有底，就容易成功。'},
+         {n:'凿壁偷光',s:'匡衡家里穷，在墙上凿洞借邻居的灯光读书。',m:'形容人勤奋刻苦、创造条件学习。赞扬在艰苦环境中依然坚持读书的精神。'},
+         {n:'入木三分',s:'王羲之写字力透纸背，相传墨迹渗入木板三分。',m:'形容书法笔力强劲，也比喻见解、议论深刻、有力。'}],
+      4:[{n:'卧薪尝胆',s:'越王勾践睡柴草、尝苦胆，时刻不忘复仇之志，终于灭吴。',m:'形容人忍辱负重、发愤图强。指在困境中刻苦自励，立志雪耻复仇。'},
+         {n:'负荆请罪',s:'廉颇背着荆条到蔺相如门前请罪，两人和好齐心保国。',m:'比喻诚恳认错、主动请求责罚。也形容人与人之间不计前嫌、和睦团结。'},
+         {n:'精卫填海',s:'精卫鸟衔石木填东海，永不停歇。',m:'比喻意志坚强、不畏艰难、奋斗到底。赞扬永不放弃、持之以恒的精神。'}],
+      5:[{n:'程门立雪',s:'杨时和游酢冒雪站立在程颐门外，等老师醒来才进屋。',m:'比喻尊敬师长、诚心求学。形容学生恭敬受教、虚心求学的态度。'},
+         {n:'刻舟求剑',s:'有人在船上刻记号找掉落的剑，船已走远，自然找不到。',m:'比喻拘泥成法、不知随情势变化。警示我们要灵活变通，不能死板。'},
+         {n:'滥竽充数',s:'南郭先生不会吹竽，混在乐队里装样子，一旦独奏就露馅了。',m:'比喻没有真本领的人混在行家里充数。也讽刺靠蒙混过日子的人。'}],
+      6:[{n:'鞠躬尽瘁',s:'诸葛亮为蜀汉日夜操劳，竭尽心力直到生命最后一刻。',m:'形容恭敬谨慎，竭尽心力去效劳。多用来赞颂尽心尽责、奉献一生的人。'},
+         {n:'锲而不舍',s:'荀子说，用刀刻东西，不停下来就终能刻穿。',m:'比喻有恒心、有毅力，坚持不懈。说明只要不停地刻下去，终究能成功。'},
+         {n:'任重道远',s:'曾子说，士人不可以不志向远大，因为责任重大、路途遥远。',m:'比喻担子沉重，路程遥远，须长期奋斗。常用来形容责任重大，需要持久努力。'}]
+    };
+    const IDIOM_Q = {
+      1:[{q:'小明做事总爱多此一举，真是（ ）。',a:['画蛇添足','守株待兔','专心致志'],c:'画蛇添足',e:'做了多余的事反而坏事，正是画蛇添足。'},
+         {q:'想着不干活就能有收获，可用（ ）来形容。',a:['守株待兔','闻鸡起舞','胸有成竹'],c:'守株待兔',e:'妄想不劳而获，正是守株待兔。'},
+         {q:'羊丢了才修圈，还不算晚，这叫（ ）。',a:['亡羊补牢','愚公移山','守株待兔'],c:'亡羊补牢',e:'出问题及时补救，就是亡羊补牢。'}],
+      2:[{q:'做事有恒心、坚持不懈就能成功，可用（ ）比喻。',a:['愚公移山','掩耳盗铃','画蛇添足'],c:'愚公移山',e:'坚持不懈终能成功，正是愚公移山。'},
+         {q:'自己骗自己、掩盖不住的事偏要掩盖，是（ ）。',a:['掩耳盗铃','亡羊补牢','卧薪尝胆'],c:'掩耳盗铃',e:'自欺欺人就是掩耳盗铃。'},
+         {q:'他每天天不亮就起来读书，可用（ ）形容。',a:['闻鸡起舞','凿壁偷光','卧薪尝胆'],c:'闻鸡起舞',e:'及时奋发、刻苦自励即闻鸡起舞。'}],
+      3:[{q:'他回答问题前心里早有把握，真是（ ）。',a:['胸有成竹','掩耳盗铃','画蛇添足'],c:'胸有成竹',e:'做事前有通盘考虑，就是胸有成竹。'},
+         {q:'家里穷仍想办法读书，可用（ ）形容。',a:['凿壁偷光','入木三分','负荆请罪'],c:'凿壁偷光',e:'创造条件勤奋学习即凿壁偷光。'},
+         {q:'形容书法笔力强劲，可用（ ）比喻。',a:['入木三分','精卫填海','掩耳盗铃'],c:'入木三分',e:'笔力强劲或议论深刻即入木三分。'}],
+      4:[{q:'他忍辱负重多年终于成功，令人想到（ ）。',a:['卧薪尝胆','入木三分','闻鸡起舞'],c:'卧薪尝胆',e:'忍辱负重、发愤图强即卧薪尝胆。'},
+         {q:'他诚恳认错、请求责罚，可用（ ）形容。',a:['负荆请罪','精卫填海','画蛇添足'],c:'负荆请罪',e:'诚恳认错即负荆请罪。'},
+         {q:'意志坚强、不畏艰难奋斗到底，可用（ ）比喻。',a:['精卫填海','亡羊补牢','胸有成竹'],c:'精卫填海',e:'顽强不屈、奋斗到底即精卫填海。'}],
+      5:[{q:'他诚心向老师求学，哪怕冒雪等候，可用（ ）形容。',a:['程门立雪','滥竽充数','刻舟求剑'],c:'程门立雪',e:'尊敬师长、诚心求学即程门立雪。'},
+         {q:'没有真本领却混在行家里面充数，是（ ）。',a:['滥竽充数','刻舟求剑','入木三分'],c:'滥竽充数',e:'混在行家里充数即滥竽充数。'},
+         {q:'情况变了还死守老办法，可用（ ）比喻。',a:['刻舟求剑','程门立雪','负荆请罪'],c:'刻舟求剑',e:'拘泥成法、不知变通即刻舟求剑。'}],
+      6:[{q:'为事业竭尽心力直到最后一刻，可用（ ）形容。',a:['鞠躬尽瘁','锲而不舍','任重道远'],c:'鞠躬尽瘁',e:'恭敬谨慎、竭尽心力即鞠躬尽瘁。'},
+         {q:'做事有恒心、坚持不懈，可用（ ）形容。',a:['锲而不舍','任重道远','画蛇添足'],c:'锲而不舍',e:'坚持不懈就是锲而不舍。'},
+         {q:'担子重、路程远，须长期奋斗，可用（ ）形容。',a:['任重道远','精卫填海','守株待兔'],c:'任重道远',e:'责任重大、路途遥远即任重道远。'}]
+    };
+    const WRITING = {
+      1:['一','二','三','上','口','日','水','火','木','山','田','人'],
+      2:['春','夏','秋','冬','风','雨','花','鸟','虫','鱼','云','月'],
+      3:['江','河','湖','海','青','山','绿','水','快','乐','明','亮'],
+      4:['勤','奋','勇','敢','智','慧','理','想','未','来','诚','信'],
+      5:['谦','虚','谨','慎','辉','煌','灿','烂','振','兴','志','向'],
+      6:['厚','德','载','物','自','强','不','息','志','远','博','学']
+    };
+    // 控笔训练每个字的拼音（用于上方三线格标注 + 拼读朗读）
+    const WRITING_PINYIN = {
+      '一':'yī','二':'èr','三':'sān','上':'shàng','口':'kǒu','日':'rì','水':'shuǐ','火':'huǒ','木':'mù','山':'shān','田':'tián','人':'rén',
+      '春':'chūn','夏':'xià','秋':'qiū','冬':'dōng','风':'fēng','雨':'yǔ','花':'huā','鸟':'niǎo','虫':'chóng','鱼':'yú','云':'yún','月':'yuè',
+      '江':'jiāng','河':'hé','湖':'hú','海':'hǎi','青':'qīng','山':'shān','绿':'lǜ','水':'shuǐ','快':'kuài','乐':'lè','明':'míng','亮':'liàng',
+      '勤':'qín','奋':'fèn','勇':'yǒng','敢':'gǎn','智':'zhì','慧':'huì','理':'lǐ','想':'xiǎng','未':'wèi','来':'lái','诚':'chéng','信':'xìn',
+      '谦':'qiān','虚':'xū','谨':'jǐn','慎':'shèn','辉':'huī','煌':'huáng','灿':'càn','烂':'làn','振':'zhèn','兴':'xīng','志':'zhì','向':'xiàng',
+      '厚':'hòu','德':'dé','载':'zài','物':'wù','自':'zì','强':'qiáng','不':'bù','息':'xī','志':'zhì','远':'yuǎn','博':'bó','学':'xué'
+    };
+    const WRITING_Q = {
+      1:[{q:'“水”字一共有几画？',a:['4画','3画','5画'],c:'4画',e:'水：竖钩、横撇、撇、捺，共4画。'},
+         {q:'“火”字的第一笔是？',a:['点','撇','捺'],c:'点',e:'火：点、撇、撇、捺，第一笔是点。'},
+         {q:'“口”字的第二笔是？',a:['横折','竖','横'],c:'横折',e:'口：竖、横折、横，第二笔是横折。'}],
+      2:[{q:'“风”字的第二笔是？',a:['横折弯钩','撇','点'],c:'横折弯钩',e:'风：撇、横折弯钩、撇、点。'},
+         {q:'“花”字的上半部分是？',a:['草字头','宝盖头','人字头'],c:'草字头',e:'花=艹+化，上是草字头。'},
+         {q:'“雨”字一共有几画？',a:['8画','6画','10画'],c:'8画',e:'雨：横、竖、横折钩、竖、点、点、点、点，共8画。'}],
+      3:[{q:'“江”字的左边偏旁是？',a:['三点水','单人旁','木字旁'],c:'三点水',e:'江=氵+工，左为三点水。'},
+         {q:'“海”字的右边是？',a:['每','母','海'],c:'每',e:'海=氵+每，右为每。'},
+         {q:'“绿”字的左边偏旁是？',a:['绞丝旁','三点水','木字旁'],c:'绞丝旁',e:'绿=纟+录，左为绞丝旁。'}],
+      4:[{q:'“勤”字共有几画？',a:['13画','11画','15画'],c:'13画',e:'勤：左“堇”11画+右“力”2画=13画。'},
+         {q:'“勇”字的下半部分是？',a:['力','刀','勾'],c:'力',e:'勇=甬+力，下为力。'},
+         {q:'“慧”字的下面部分是？',a:['心','丰','彐'],c:'心',e:'慧=彗+心，下为心。'}],
+      5:[{q:'“谨”字的右边是？',a:['堇','仅','近'],c:'堇',e:'谨=讠+堇，右为堇。'},
+         {q:'“慎”字的左边偏旁是？',a:['竖心旁','提手旁','言字旁'],c:'竖心旁',e:'慎=忄+真，左为竖心旁。'},
+         {q:'“煌”字的左边偏旁是？',a:['火字旁','提土旁','王字旁'],c:'火字旁',e:'煌=火+皇，左为火字旁。'}],
+      6:[{q:'“想”字的下半部分是？',a:['心','目','木'],c:'心',e:'想=相+心，下为心。'},
+         {q:'“德”字的右边是？',a:['㥁','直','得'],c:'㥁',e:'德=彳+㥁，右为㥁。'},
+         {q:'“息”字的下半部分是？',a:['心','自','目'],c:'心',e:'息=自+心，下为心。'}]
+    };
+    const PINYIN = {
+      1:[{syl:'bà ba',zh:'爸爸',opt:['妈妈','爸爸','哥哥','弟弟'],ans:'爸爸'},
+         {syl:'mā ma',zh:'妈妈',opt:['爷爷','奶奶','妈妈','姐姐'],ans:'妈妈'},
+         {syl:'dà',zh:'大',opt:['小','大','多','少'],ans:'大'},
+         {syl:'xiǎo',zh:'小',opt:['大','小','高','矮'],ans:'小'},
+         {syl:'shuǐ',zh:'水',opt:['火','水','土','木'],ans:'水'}],
+      2:[{syl:'huā duǒ',zh:'花朵',opt:['小草','树叶','花朵','太阳'],ans:'花朵'},
+         {syl:'fēng chē',zh:'风车',opt:['风车','雨伞','火车','飞机'],ans:'风车'},
+         {syl:'xiǎo niǎo',zh:'小鸟',opt:['小鱼','小猫','小鸟','小兔'],ans:'小鸟'},
+         {syl:'hóng qí',zh:'红旗',opt:['红旗','绿树','白云','草地'],ans:'红旗'},
+         {syl:'mén chuāng',zh:'门窗',opt:['门窗','桌椅','书本','铅笔'],ans:'门窗'}],
+      3:[{syl:'xué xiào',zh:'学校',opt:['医院','学校','公园','超市'],ans:'学校'},
+         {syl:'péng you',zh:'朋友',opt:['老师','同学','朋友','家人'],ans:'朋友'},
+         {syl:'měi lì',zh:'美丽',opt:['漂亮','美丽','高大','矮小'],ans:'美丽'},
+         {syl:'rèn zhēn',zh:'认真',opt:['马虎','认真','粗心','懒惰'],ans:'认真'},
+         {syl:'yǔ yán',zh:'语言',opt:['语言','数学','音乐','体育'],ans:'语言'}],
+      4:[{syl:'yǒng gǎn',zh:'勇敢',opt:['胆小','勇敢','害怕','软弱'],ans:'勇敢'},
+         {syl:'zhì huì',zh:'智慧',opt:['愚蠢','聪明','智慧','笨拙'],ans:'智慧'},
+         {syl:'jiān chí',zh:'坚持',opt:['放弃','坚持','退缩','懒散'],ans:'坚持'},
+         {syl:'yōu xiù',zh:'优秀',opt:['优秀','平庸','普通','一般'],ans:'优秀'},
+         {syl:'nǔ lì',zh:'努力',opt:['努力','松懈','偷懒','放弃'],ans:'努力'}],
+      5:[{syl:'jǐn shèn',zh:'谨慎',opt:['谨慎','疏忽','大意','马虎'],ans:'谨慎'},
+         {syl:'huī huáng',zh:'辉煌',opt:['暗淡','辉煌','平凡','普通'],ans:'辉煌'},
+         {syl:'zǔ guó',zh:'祖国',opt:['家乡','祖国','城市','村庄'],ans:'祖国'},
+         {syl:'fèn dòu',zh:'奋斗',opt:['奋斗','消沉','懈怠','放弃'],ans:'奋斗'},
+         {syl:'lǐ xiǎng',zh:'理想',opt:['理想','幻想','空想','妄想'],ans:'理想'}],
+      6:[{syl:'jiān rèn',zh:'坚韧',opt:['脆弱','坚韧','软弱','易碎'],ans:'坚韧'},
+         {syl:'chóng gāo',zh:'崇高',opt:['卑劣','崇高','低下','庸俗'],ans:'崇高'},
+         {syl:'zé rèn',zh:'责任',opt:['责任','敷衍','推卸','漠视'],ans:'责任'},
+         {syl:'fèng xiàn',zh:'奉献',opt:['索取','奉献','自私','吝啬'],ans:'奉献'},
+         {syl:'pǔ shí',zh:'朴实',opt:['浮夸','朴实','虚荣','炫耀'],ans:'朴实'}]
+    };
+    const PICTURE = {
+      1:{emoji:'🐱🌞🪟',desc:'一只小花猫趴在窗台上，暖暖的阳光照在它身上。',p:'图上有一只小猫在窗台上晒太阳。请你仔细观察，用 1~2 句话写一写小猫的样子和动作。',s:'示例：小猫趴在窗台上晒太阳，眯着眼睛，尾巴轻轻摆动，样子真可爱。',more:['阳光洒在小猫身上，暖暖的，它舒服得打起了呼噜。','小猫把头靠在爪子上，像在做一个甜甜的梦。']},
+      2:{emoji:'🐶⚽🌳',desc:'一只小狗在绿油油的大树下，用爪子踢着小皮球。',p:'图上的小狗在树下做什么？请用 2~3 句话写一写，写清动作。',s:'示例：小狗在树下踢足球。它用爪子轻轻一踢，球滚了出去，小狗高兴地追了上去。',more:['小狗追着球跑了一圈，吐着舌头，气喘吁吁却很开心。','树上的小鸟叽叽喳喳，好像在给小狗喊“加油”。']},
+      3:{emoji:'🧒🌧️☂️🌧️',desc:'下着雨，一个小朋友撑着小雨伞，小心地走在回家的路上。',p:'下雨了，小朋友在做什么？请用 3~4 句话写，用上“先……再……”。',s:'示例：下雨了，小红先收起书本，再撑开雨伞走回家。雨水打在伞面上，发出哒哒的响声。',more:['小红踩着水坑，水花溅起像一朵朵小白花。','回到家，她把湿漉漉的伞放在门口，妈妈笑着夸她真懂事。']},
+      4:{emoji:'🚣🌸🌳🌊',desc:'春天的小湖边，桃花开得粉粉的，一只小船在碧绿的湖面上慢慢漂着。',p:'春天去湖上划船，请用一段话描写，用上一个比喻句。',s:'示例：周末我们到湖上划船。岸边的桃花像害羞的小姑娘，粉粉地探出头来。小船像一片叶子，轻轻漂在碧绿的湖面上。',more:['湖水清清的，能看见小鱼在船下游来游去。','微风拂过，柳枝垂到水面，荡起一圈圈小小的涟漪。']},
+      5:{emoji:'🔥🏠🚒👨‍🚒💦',desc:'傍晚，一栋房子的厨房冒出了浓浓的黑烟，红色的消防车闪着灯赶来了。',p:'图上发生了什么事？请用一段话写清起因、经过和结果。',s:'示例：傍晚，邻居家的厨房突然冒出浓烟。消防员叔叔很快赶来，举起水枪把火扑灭，大家都松了一口气。',more:['消防车红蓝灯闪烁，警笛声划破夜空，邻居们连忙撤离到安全的地方。','火扑灭后，消防员叔叔提醒大家：用火用电一定要注意安全。']},
+      6:{emoji:'🌃🏙️🌉💡',desc:'夜深了，城市里高楼亮起星星点点的灯火，马路上的车灯像流动的河。',p:'描写城市的夜晚，用上拟人 or 排比。',s:'示例：夜幕降临，高楼亮起了灯火，路灯排着队守护街道，霓虹眨着眼睛诉说繁华。城市，在寂静中悄悄绽放它的美丽。',more:['汽车像流动的星星，在马路上织出一条光的长河。','便利店还亮着灯，像一位不睡觉的朋友，等着晚归的人。']}
+    };
+    const PICTURE_Q = {
+      1:[{q:'小猫（ ）窗台上晒太阳。',a:['在','再','正'],c:'在',e:'表示位置用“在”。'},
+         {q:'小猫眯着（ ）睛，样子真可爱。',a:['眼','很','再'],c:'眼',e:'“眼睛”是正确词语。'}],
+      2:[{q:'小狗（ ）树下踢足球。',a:['在','再','也'],c:'在',e:'表示地点用“在”。'},
+         {q:'小狗高兴（ ）追了上去。',a:['地','的','得'],c:'地',e:'动词前用“地”。'}],
+      3:[{q:'小红（ ）收起书本，（ ）撑开雨伞。',a:['先…再','再…先','也…也'],c:'先…再',e:'先后顺序用“先……再……”。'},
+         {q:'雨水打（ ）伞面上。',a:['在','再','正'],c:'在',e:'表示位置用“在”。'}],
+      4:[{q:'小船（ ）一片叶子，轻轻漂在湖面。',a:['像','向','象'],c:'像',e:'比喻用“像”。'},
+         {q:'岸边的桃花（ ）害羞的小姑娘。',a:['像','向','象'],c:'像',e:'比喻用“像”。'}],
+      5:[{q:'消防员叔叔（ ）把火扑灭了。',a:['很快','很慢','不'],c:'很快',e:'情况紧急，用“很快”。'},
+         {q:'大家（ ）松了一口气。',a:['都','多','朵'],c:'都',e:'表示全部用“都”。'}],
+      6:[{q:'城市（ ）悄悄绽放它的美丽。',a:['在寂静中','在喧闹里','在天亮前'],c:'在寂静中',e:'与“寂静”呼应，用“在寂静中”。'},
+         {q:'霓虹眨着眼睛（ ）繁华。',a:['诉说','诉苦','诉讼'],c:'诉说',e:'拟人化用“诉说”。'}]
+    };
+    const MATH_SYNC = {
+      1:[{q:'小明有 8 颗糖，分给同桌 3 颗，还剩几颗？',a:['5','4','6','3'],c:'5',e:'用减法：8 - 3 = 5（颗）。'},
+         {q:'操场左边有 6 个小朋友，右边有 7 个，一共有几个？',a:['13','12','14','11'],c:'13',e:'用加法：6 + 7 = 13（个）。'},
+         {q:'妈妈买了 5 个苹果，吃掉 2 个，还剩几个？',a:['3','2','4','1'],c:'3',e:'用减法：5 - 2 = 3（个）。'},
+         {q:'一盒铅笔有 10 支，分给 4 个同学每人 1 支，还剩几支？',a:['6','5','7','4'],c:'6',e:'用减法：10 - 4 = 6（支）。'}],
+      2:[{q:'一盒铅笔有 24 支，平均分成 4 份，每份几支？',a:['6','5','7','8'],c:'6',e:'平均分用除法：24 ÷ 4 = 6（支）。'},
+         {q:'书店上午卖出 35 本，下午卖出 28 本，共卖出多少本？',a:['63','62','64','61'],c:'63',e:'用加法：35 + 28 = 63（本）。'},
+         {q:'一支铅笔 2 元，买 5 支需要多少元？',a:['10','9','11','8'],c:'10',e:'用乘法：2 × 5 = 10（元）。'},
+         {q:'停车场原有 50 辆车，开走 18 辆，还剩几辆？',a:['32','30','34','28'],c:'32',e:'用减法：50 - 18 = 32（辆）。'}],
+      3:[{q:'每包糖有 6 颗，买 7 包一共有多少颗？',a:['42','40','44','36'],c:'42',e:'求总数用乘法：6 × 7 = 42（颗）。'},
+         {q:'一棵树上原有 56 只鸟，飞走 19 只，还剩几只？',a:['37','36','38','35'],c:'37',e:'用减法：56 - 19 = 37（只）。'},
+         {q:'把 48 个苹果平均分给 6 个小朋友，每人几个？',a:['8','7','9','6'],c:'8',e:'用除法：48 ÷ 6 = 8（个）。'},
+         {q:'一本书 80 页，第一天看 25 页，第二天看 30 页，还剩几页？',a:['25','20','30','35'],c:'25',e:'用减法：80 - 25 - 30 = 25（页）。'}],
+      4:[{q:'一个书包 89 元，一个文具盒 25 元，一共多少元？',a:['114','113','115','112'],c:'114',e:'用加法：89 + 25 = 114（元）。'},
+         {q:'操场长 120 米，小明跑了 3 圈，一共跑了多少米？',a:['360','320','300','240'],c:'360',e:'求几个相同加数用乘法：120 × 3 = 360（米）。'},
+         {q:'一套书 4 本，每本 28 元，一共多少元？',a:['112','108','116','120'],c:'112',e:'用乘法：28 × 4 = 112（元）。'},
+         {q:'果园摘了 360 千克苹果，装满 6 箱，每箱多少千克？',a:['60','50','70','66'],c:'60',e:'用除法：360 ÷ 6 = 60（千克）。'}],
+      5:[{q:'一支笔 2.5 元，买 4 支需要多少元？',a:['10','9','8','11'],c:'10',e:'用乘法：2.5 × 4 = 10（元）。'},
+         {q:'妈妈带了 50 元，买菜花去 18.5 元，还剩多少？',a:['31.5','32.5','30.5','33.5'],c:'31.5',e:'用减法：50 - 18.5 = 31.5（元）。'},
+         {q:'一块橡皮 1.2 元，买 3 块需要多少元？',a:['3.6','3.2','4.0','3.0'],c:'3.6',e:'用乘法：1.2 × 3 = 3.6（元）。'},
+         {q:'一桶油 40 元，用了 12.8 元后还剩多少？',a:['27.2','26.2','28.2','25.2'],c:'27.2',e:'用减法：40 - 12.8 = 27.2（元）。'}],
+      6:[{q:'一袋大米重 3/4 千克，2 袋共重多少千克？',a:['1又1/2','1/2','2','3/4'],c:'1又1/2',e:'求几个相同分数用乘法：3/4 × 2 = 6/4 = 1又1/2（千克）。'},
+         {q:'小明看一本书，第一天看了全书的 1/3，第二天看了 1/4，两天共看几分之几？',a:['7/12','1/2','2/7','1/12'],c:'7/12',e:'通分相加：1/3 + 1/4 = 4/12 + 3/12 = 7/12。'},
+         {q:'一个圆柱的底面半径是 2 厘米，高是 5 厘米，体积是多少？',a:['62.8','31.4','125.6','20'],c:'62.8',e:'圆柱体积=πr²h≈3.14×2²×5=62.8（立方厘米）。'},
+         {q:'甲、乙的速度比是 3:4，相同时间甲走 60 米，乙走多少米？',a:['80','75','70','90'],c:'80',e:'乙=60÷3×4=80（米）。'}]
+    };
+    const MATH_THINK = {
+      1:[{q:'按规律填数：2，4，6，8，（  ），12。',a:['10','9','11','13'],c:'10',e:'规律是每次加 2，8 + 2 = 10。'},
+         {q:'按规律填数：1，3，5，7，（  ），11。',a:['9','8','10','12'],c:'9',e:'规律是每次加 2，7 + 2 = 9。'},
+         {q:'小明排第 5，后面还有 3 人，一共有几人？',a:['8','7','9','6'],c:'8',e:'5 + 3 = 8（人）。'}],
+      2:[{q:'时钟上分针指向 12，时针指向 3，是几时？',a:['3时','6时','9时','12时'],c:'3时',e:'时针指几就是几时，分针指 12 为整点，所以是 3 时。'},
+         {q:'钟面上分针指向 6，时针在 7 和 8 之间，是几时半？',a:['7时半','6时半','8时半','7时'],c:'7时半',e:'时针在7、8之间且分针指6，是7时30分。'},
+         {q:'一根绳子对折一次变成几段？',a:['2段','1段','3段','4段'],c:'2段',e:'对折一次绳子分成 2 段。'}],
+      3:[{q:'一桶水连桶重 10 千克，倒出一半水后连桶重 6 千克，水重多少千克？',a:['8','6','4','10'],c:'8',e:'倒出的一半水 = 10 - 6 = 4 千克，整桶水 = 4 × 2 = 8 千克。'},
+         {q:'一个数加上 15 等于 40，这个数是多少？',a:['25','35','30','20'],c:'25',e:'40 - 15 = 25。'},
+         {q:'3 个连续自然数之和是 18，最大的数是？',a:['7','6','8','5'],c:'7',e:'中间数=18÷3=6，三个数为5、6、7，最大是7。'}],
+      4:[{q:'一个数除以 5 余 3，除以 6 余 3，这个数最小是多少？',a:['33','30','28','23'],c:'33',e:'这个数是 5 和 6 的公倍数加 3，最小公倍数 30，30 + 3 = 33。'},
+         {q:'甲、乙、丙三人年龄和是 60 岁，甲比乙大 5 岁，乙比丙大 5 岁，丙几岁？',a:['15','20','25','10'],c:'15',e:'设丙 x 岁，则乙 x+5，甲 x+10，x+(x+5)+(x+10)=60，3x=45，x=15。'},
+         {q:'鸡兔同笼，共 8 个头、22 只脚，鸡有几只？',a:['5','3','6','4'],c:'5',e:'假设全是兔有32脚，多10脚，每换1只鸡少2脚，鸡=5只。'}],
+      5:[{q:'连续 5 个自然数之和是 100，中间一个数是多少？',a:['20','18','22','25'],c:'20',e:'5 个连续自然数之和等于中间数的 5 倍，100 ÷ 5 = 20。'},
+         {q:'一个数扩大 10 倍是 45，这个数原来是多少？',a:['4.5','45','0.45','450'],c:'4.5',e:'45 ÷ 10 = 4.5。'},
+         {q:'甲乙两数和 80，甲是乙的 3 倍，乙是多少？',a:['20','60','40','15'],c:'20',e:'乙=80÷(3+1)=20。'}],
+      6:[{q:'甲、乙、丙三人年龄和是 60 岁，甲比乙大 5 岁，乙比丙大 5 岁，丙几岁？（变式）',a:['15','20','10','25'],c:'15',e:'设丙 x，则乙 x+5，甲 x+10，3x+15=60，x=15。'},
+         {q:'一个分数分子加 1 等于 1/2，分母加 1 等于 1/3，原分数是多少？',a:['3/8','2/5','1/4','4/9'],c:'3/8',e:'试算：3/8 分子+1=4/8=1/2，分母+1=3/9=1/3，符合。'},
+         {q:'一件商品先提价 1/10，再降价 1/10，现价是原价的几分之几？',a:['99/100','1','9/10','11/10'],c:'99/100',e:'设原价100，提价后110，再降1/10为99，现价是99/100。'}]
+    };
+    const EN_WORDS = {
+      1:[{w:'apple',ph:'/ˈæp.əl/',m:'苹果',s:'I like apples.',sc:'我喜欢苹果。',pho:'a-pp-le'},
+         {w:'book',ph:'/bʊk/',m:'书',s:'This is my book.',sc:'这是我的书。',pho:'b-oo-k'},
+         {w:'cat',ph:'/kæt/',m:'猫',s:'The cat is small.',sc:'这只猫很小。',pho:'c-a-t'},
+         {w:'dog',ph:'/dɒɡ/',m:'狗',s:'I have a dog.',sc:'我有一只狗。',pho:'d-o-g'},
+         {w:'sun',ph:'/sʌn/',m:'太阳',s:'The sun is hot.',sc:'太阳很热。',pho:'s-u-n'},
+         {w:'red',ph:'/red/',m:'红色',s:'I like red.',sc:'我喜欢红色。',pho:'r-e-d'},
+         {w:'pen',ph:'/pen/',m:'钢笔',s:'This is my pen.',sc:'这是我的钢笔。',pho:'p-e-n'}],
+      2:[{w:'school',ph:'/skuːl/',m:'学校',s:'I go to school.',sc:'我去上学。',pho:'s-ch-oo-l'},
+         {w:'friend',ph:'/frend/',m:'朋友',s:'You are my friend.',sc:'你是我的朋友。',pho:'f-r-ie-nd'},
+         {w:'water',ph:'/ˈwɔː.tər/',m:'水',s:'I drink water.',sc:'我喝水。',pho:'w-a-ter'},
+         {w:'happy',ph:'/ˈhæp.i/',m:'快乐的',s:'I am happy.',sc:'我很快乐。',pho:'h-a-pp-y'},
+         {w:'green',ph:'/ɡriːn/',m:'绿色',s:'The tree is green.',sc:'树是绿色的。',pho:'g-r-ee-n'},
+         {w:'blue',ph:'/bluː/',m:'蓝色',s:'The sky is blue.',sc:'天空是蓝色的。',pho:'b-l-ue'},
+         {w:'play',ph:'/pleɪ/',m:'玩',s:'We play together.',sc:'我们一起玩。',pho:'p-l-ay'}],
+      3:[{w:'family',ph:'/ˈfæm.əl.i/',m:'家庭',s:'I love my family.',sc:'我爱我的家人。',pho:'f-a-mi-ly'},
+         {w:'teacher',ph:'/ˈtiː.tʃər/',m:'老师',s:'My teacher is kind.',sc:'我的老师很和蔼。',pho:'t-ea-ch-er'},
+         {w:'breakfast',ph:'/ˈbrek.fəst/',m:'早餐',s:'I eat breakfast.',sc:'我吃早餐。',pho:'b-rea-k-fast'},
+         {w:'beautiful',ph:'/ˈbjuː.tɪ.fəl/',m:'美丽的',s:'It is beautiful.',sc:'它很美丽。',pho:'beau-ti-ful'},
+         {w:'weather',ph:'/ˈweð.ər/',m:'天气',s:'The weather is nice.',sc:'天气很好。',pho:'wea-ther'},
+         {w:'animal',ph:'/ˈæn.ɪ.məl/',m:'动物',s:'The animal is cute.',sc:'这只动物很可爱。',pho:'a-ni-mal'},
+         {w:'yellow',ph:'/ˈjel.əʊ/',m:'黄色',s:'I like yellow.',sc:'我喜欢黄色。',pho:'ye-llo-w'}],
+      4:[{w:'library',ph:'/ˈlaɪ.brər.i/',m:'图书馆',s:'We read in the library.',sc:'我们在图书馆看书。',pho:'li-bra-ry'},
+         {w:'mountain',ph:'/ˈmaʊn.tən/',m:'山',s:'The mountain is high.',sc:'这座山很高。',pho:'moun-tain'},
+         {w:'exercise',ph:'/ˈek.sə.saɪz/',m:'锻炼',s:'I do exercise.',sc:'我锻炼身体。',pho:'ex-er-cise'},
+         {w:'neighbor',ph:'/ˈneɪ.bər/',m:'邻居',s:'My neighbor is nice.',sc:'我的邻居人很好。',pho:'neigh-bor'},
+         {w:'science',ph:'/ˈsaɪ.əns/',m:'科学',s:'I like science.',sc:'我喜欢科学。',pho:'sci-ence'},
+         {w:'wonderful',ph:'/ˈwʌn.dər.fəl/',m:'精彩的',s:'The view is wonderful.',sc:'景色很精彩。',pho:'won-der-ful'},
+         {w:'holiday',ph:'/ˈhɒl.ə.deɪ/',m:'假日',s:'We have a holiday.',sc:'我们有一个假期。',pho:'ho-li-day'}],
+      5:[{w:'environment',ph:'/ɪnˈvaɪ.rən.mənt/',m:'环境',s:'We protect the environment.',sc:'我们保护环境。',pho:'en-vi-ron-ment'},
+         {w:'celebrate',ph:'/ˈsel.ə.breɪt/',m:'庆祝',s:'We celebrate Spring Festival.',sc:'我们庆祝春节。',pho:'ce-le-brate'},
+         {w:'necessary',ph:'/ˈnes.ə.ser.i/',m:'必要的',s:'Water is necessary.',sc:'水是必要的。',pho:'ne-ces-sa-ry'},
+         {w:'excellent',ph:'/ˈek.səl.ənt/',m:'优秀的',s:'He is excellent.',sc:'他很优秀。',pho:'ex-cel-lent'},
+         {w:'temperature',ph:'/ˈtem.prə.tʃər/',m:'温度',s:'The temperature is low.',sc:'气温很低。',pho:'tem-pe-ra-ture'},
+         {w:'knowledge',ph:'/ˈnɒl.ɪdʒ/',m:'知识',s:'Knowledge is power.',sc:'知识就是力量。',pho:'know-led-ge'},
+         {w:'mountainous',ph:'/ˈmaʊn.tən.əs/',m:'多山的',s:'It is a mountainous area.',sc:'那是一个多山的地区。',pho:'moun-tai-nous'}],
+      6:[{w:'achievement',ph:'/əˈtʃiːv.mənt/',m:'成就',s:'Hard work brings achievement.',sc:'努力带来成就。',pho:'a-chieve-ment'},
+         {w:'responsibility',ph:'/rɪ.spɒn.səˈbɪl.ə.ti/',m:'责任',s:'We have responsibility.',sc:'我们有责任。',pho:'re-spon-si-bi-li-ty'},
+         {w:'opportunity',ph:'/ˌɒp.əˈtjuː.nə.ti/',m:'机会',s:'Study gives opportunity.',sc:'学习带来机会。',pho:'op-por-tu-ni-ty'},
+         {w:'encouragement',ph:'/ɪnˈkʌr.ɪdʒ.mənt/',m:'鼓励',s:'His encouragement helps me.',sc:'他的鼓励帮助了我。',pho:'en-cou-rage-ment'},
+         {w:'phenomenon',ph:'/fəˈnɒm.ɪ.nən/',m:'现象',s:'It is a natural phenomenon.',sc:'这是一种自然现象。',pho:'phe-nom-e-non'},
+         {w:'diligence',ph:'/ˈdɪl.ɪ.dʒəns/',m:'勤奋',s:'Diligence leads to success.',sc:'勤奋通向成功。',pho:'di-li-gence'},
+         {w:'perseverance',ph:'/ˌpɜː.səˈvɪə.rəns/',m:'毅力',s:'Perseverance wins in the end.',sc:'坚持终会胜利。',pho:'per-se-ve-rance'}]
+    };
+    const EN_TEXT = {
+      1:{t:'Hello! My name is Tom. I am seven. I like red. I have a dog.',cn:'你好！我的名字是汤姆。我七岁了。我喜欢红色。我有一只狗。',q:[{q:'What is the boy name?',qcn:'这个男孩叫什么名字？',a:['Tom','Tim','Sam'],c:'Tom'},{q:'How old is he?',qcn:'他几岁了？',a:['Six','Seven','Eight'],c:'Seven'},{q:'What color does he like?',qcn:'他喜欢什么颜色？',a:['Red','Blue','Green'],c:'Red'}]},
+      2:{t:'This is my school. It is big and clean. I have many friends here. We play together.',cn:'这是我的学校。它又大又干净。我在这里有许多朋友。我们一起玩耍。',q:[{q:'Is the school big?',qcn:'学校大吗？',a:['Yes','No'],c:'Yes'},{q:'Does he have friends?',qcn:'他有朋友吗？',a:['Yes','No'],c:'Yes'},{q:'Do they play together?',qcn:'他们一起玩吗？',a:['Yes','No'],c:'Yes'}]},
+      3:{t:'My mother is a teacher. She goes to work by bus. She cooks dinner for us every day.',cn:'我的妈妈是一名老师。她坐公交车去上班。她每天给我们做晚饭。',q:[{q:'What is his mother?',qcn:'他的妈妈是做什么的？',a:['A doctor','A teacher','A driver'],c:'A teacher'},{q:'How does she go to work?',qcn:'她怎么去上班？',a:['By bus','By car','On foot'],c:'By bus'},{q:'What does she cook?',qcn:'她做什么饭？',a:['Dinner','Lunch','Breakfast'],c:'Dinner'}]},
+      4:{t:'Last weekend we climbed the mountain. The air was fresh and the view was wonderful. We took many photos.',cn:'上周末我们爬了山。空气清新，景色优美。我们拍了许多照片。',q:[{q:'What did they do last weekend?',qcn:'上周末他们做了什么？',a:['Climbed a mountain','Went swimming','Played football'],c:'Climbed a mountain'},{q:'Was the view wonderful?',qcn:'景色优美吗？',a:['Yes','No'],c:'Yes'},{q:'Did they take photos?',qcn:'他们拍照了吗？',a:['Yes','No'],c:'Yes'}]},
+      5:{t:'We should protect the environment. We can plant trees, save water and ride bikes to school.',cn:'我们应该保护环境。我们可以种树、节约用水，并且骑自行车上学。',q:[{q:'How can we protect environment?',qcn:'我们怎样保护环境？',a:['Plant trees','Cut trees','Burn waste'],c:'Plant trees'},{q:'Can we ride bikes to school?',qcn:'我们可以骑自行车上学吗？',a:['Yes','No'],c:'Yes'},{q:'Should we save water?',qcn:'我们应该节约用水吗？',a:['Yes','No'],c:'Yes'}]},
+      6:{t:'Success comes from hard work and a strong will. Set a goal, make a plan, and never give up. Then your dream will come true.',cn:'成功来自努力和坚强的意志。定下目标，做好计划，永不放弃。这样你的梦想就会实现。',q:[{q:'Where does success come from?',qcn:'成功来自哪里？',a:['Hard work','Luck only','Others help'],c:'Hard work'},{q:'What should we do to reach a dream?',qcn:'为了实现梦想我们应该做什么？',a:['Give up','Make a plan and insist','Do nothing'],c:'Make a plan and insist'},{q:'Will the dream come true?',qcn:'梦想会实现吗？',a:['Yes','No'],c:'Yes'}]}
+    };
+    const EN_PATTERN = {
+      1:[{pat:'I am + 名字',pc:'我是 + 名字',ex:'I am Tom.',ec:'我是汤姆。',pho:'/aɪ æm tɒm/'},{pat:'This is + 物品',pc:'这是 + 物品',ex:'This is a book.',ec:'这是一本书。',pho:'/ðɪs ɪz ə bʊk/'},{pat:'I like + 事物',pc:'我喜欢 + 事物',ex:'I like apples.',ec:'我喜欢苹果。',pho:'/aɪ laɪk æpəlz/'}],
+      2:[{pat:'He/She is + 形容词',pc:'他/她是 + 形容词',ex:'She is happy.',ec:'她很快乐。',pho:'/ʃi ɪz ˈhæpi/'},{pat:'I have + 物品',pc:'我有 + 物品',ex:'I have a dog.',ec:'我有一只狗。',pho:'/aɪ hæv ə dɒɡ/'},{pat:'We play + 方式',pc:'我们 + 方式 玩',ex:'We play together.',ec:'我们一起玩。',pho:'/wi pleɪ təˈɡeð.ər/'}],
+      3:[{pat:'My + 名词 + is + 形容词',pc:'我的 + 名词 + 是 + 形容词',ex:'My school is big.',ec:'我的学校很大。',pho:'/maɪ skuːl ɪz bɪɡ/'},{pat:'I can + 动词',pc:'我会 + 动词',ex:'I can swim.',ec:'我会游泳。',pho:'/aɪ kæn swɪm/'},{pat:'She goes to + 地点',pc:'她去 + 地点',ex:'She goes to work.',ec:'她去上班。',pho:'/ʃi ɡəʊz tə wɜːk/'}],
+      4:[{pat:'There is/are + 名词',pc:'有（存在）+ 名词',ex:'There is a library.',ec:'有一个图书馆。',pho:'/ðeər ɪz ə ˈlaɪ.brər.i/'},{pat:'We should + 动词',pc:'我们应该 + 动词',ex:'We should read.',ec:'我们应该读书。',pho:'/wi ʃʊd red/'},{pat:'The + 名词 + was + 形容词',pc:'这个 + 名词 + 是 + 形容词',ex:'The view was wonderful.',ec:'景色很精彩。',pho:'/ðə vjuː wɒz ˈwʌn.də.fəl/'}],
+      5:[{pat:'If + 条件, 结果',pc:'如果 + 条件，就 + 结果',ex:'If it rains, we stay.',ec:'如果下雨，我们就待着。',pho:'/ɪf ɪt reɪnz wi steɪ/'},{pat:'We can + 动词',pc:'我们可以 + 动词',ex:'We can plant trees.',ec:'我们可以种树。',pho:'/wi kæn plɑːnt triːz/'},{pat:'The more…, the more…',pc:'越……，越……',ex:'The more you read, the smarter you are.',ec:'你读得越多，就越聪明。',pho:'/ðə mɔː ju riːd/'}],
+      6:[{pat:'Not only… but also…',pc:'不但……而且……',ex:'He is not only smart but also kind.',ec:'他不但聪明，而且善良。',pho:'/nɒt ˈəʊn.li bʌt ˈɔːl.səʊ/'},{pat:'It is + adj. + to do',pc:'做某事是 + 形容词 的',ex:'It is important to study.',ec:'学习是很重要的。',pho:'/ɪt ɪz ɪmˈpɔː.tənt tə ˈstʌ.di/'},{pat:'Set a + 名词, and + 句子',pc:'定下 + 名词，并且 + 句子',ex:'Set a goal, and never give up.',ec:'定下目标，并且永不放弃。',pho:'/set ə ɡəʊl ənd ˈnev.ər ɡɪv ʌp/'}]
+    };
+    // 自然拼读教学（按年级，含朗读 + 跟读例句）
+    const EN_PHONICS = {
+      1:[
+        {grp:'a',tip:'/æ/',words:['cat','map','hat'],sentence:'The cat is on the map.'},
+        {grp:'i',tip:'/ɪ/',words:['pig','sit','big'],sentence:'The big pig can sit.'},
+        {grp:'o',tip:'/ɒ/',words:['dog','box','hot'],sentence:'The hot dog is in a box.'}
+      ],
+      2:[
+        {grp:'e',tip:'/e/',words:['pen','ten','red'],sentence:'The red pen is on the desk.'},
+        {grp:'u',tip:'/ʌ/',words:['cup','run','sun'],sentence:'The sun is up, we run.'},
+        {grp:'bl/cl',tip:'',words:['blue','black','clap'],sentence:'Clap for the blue and black.'}
+      ],
+      3:[
+        {grp:'a_e',tip:'/eɪ/',words:['cake','make','face'],sentence:'I can make a cake.'},
+        {grp:'i_e',tip:'/aɪ/',words:['bike','like','nine'],sentence:'I like my nine bikes.'},
+        {grp:'o_e',tip:'/əʊ/',words:['home','nose','rope'],sentence:'The rope is near the home.'}
+      ],
+      4:[
+        {grp:'ee/ea',tip:'/iː/',words:['see','tree','eat'],sentence:'We eat under the tree and see.'},
+        {grp:'oa/ow',tip:'/əʊ/',words:['boat','slow','snow'],sentence:'A slow boat in the snow.'},
+        {grp:'ar/or',tip:'',words:['car','star','for'],sentence:'A star is far from the car.'}
+      ],
+      5:[
+        {grp:'sh/ch',tip:'',words:['ship','shoe','chat'],sentence:'A ship and a shoe, we chat.'},
+        {grp:'th',tip:'/θ/ /ð/',words:['three','this','that'],sentence:'This and that are three.'},
+        {grp:'oo',tip:'/uː/ /ʊ/',words:['book','moon','look'],sentence:'Look at the moon in a book.'}
+      ],
+      6:[
+        {grp:'ar/er/ir',tip:'/ɜː/',words:['car','her','bird'],sentence:'Her bird is near the car.'},
+        {grp:'ou/ow',tip:'/aʊ/',words:['house','cloud','cow'],sentence:'A cow near the house in the cloud.'},
+        {grp:'silent e',tip:'',words:['time','hope','use'],sentence:'We use time and hope.'}
+      ]
+    };
+    // 自然拼读单词整词音标（用于单词下方标注）
+    const WORD_IPA = {cat:'/kæt/',map:'/mæp/',hat:'/hæt/',pig:'/pɪɡ/',sit:'/sɪt/',big:'/bɪɡ/',dog:'/dɒɡ/',box:'/bɒks/',hot:'/hɒt/',pen:'/pen/',ten:'/ten/',red:'/red/',cup:'/kʌp/',run:'/rʌn/',sun:'/sʌn/',blue:'/bluː/',black:'/blæk/',clap:'/klæp/',cake:'/keɪk/',make:'/meɪk/',face:'/feɪs/',bike:'/baɪk/',like:'/laɪk/',nine:'/naɪn/',home:'/həʊm/',nose:'/nəʊz/',rope:'/rəʊp/',see:'/siː/',tree:'/triː/',eat:'/iːt/',boat:'/bəʊt/',slow:'/sləʊ/',snow:'/snəʊ/',car:'/kɑː/',star:'/stɑː/',for:'/fɔː/',ship:'/ʃɪp/',shoe:'/ʃuː/',chat:'/tʃæt/',three:'/θriː/',this:'/ðɪs/',that:'/ðæt/',book:'/bʊk/',moon:'/muːn/',look:'/lʊk/',her:'/hɜː/',bird:'/bɜːd/',house:'/haʊs/',cloud:'/klaʊd/',cow:'/kaʊ/',time:'/taɪm/',hope:'/həʊp/',use:'/juːz/'};
+    // 英语朗读 / 情景对话（单纯朗读 + 跟读，非儿歌）
+    const EN_READ = {
+      1:{t:'I see a red apple. The cat is on the mat. We are happy.',cn:'我看见一个红苹果。猫在垫子上。我们很开心。',s:'Look at the dog. It is big and brown.',sc:'看那只狗。它又大又是棕色的。'},
+      2:{t:'This is my school. I have many friends. We play and read together.',cn:'这是我的学校。我有许多朋友。我们一起玩耍和读书。',s:'My friend is kind. We help each other at school.',sc:'我的朋友很友善。我们在学校互相帮助。'},
+      3:{t:'My family is big. My mother is a teacher. My father is a doctor.',cn:'我的家庭很大。我的妈妈是老师。我的爸爸是医生。',s:'We love our family. We eat dinner together every day.',sc:'我们爱我们的家。我们每天一起吃晚饭。'},
+      4:{t:'Last weekend we went to the library. We read many books there.',cn:'上周末我们去了图书馆。我们在那里读了许多书。',s:'The mountain was high. The air was fresh and clean.',sc:'山很高。空气清新又干净。'},
+      5:{t:'We should protect the environment. Plant trees and save water.',cn:'我们应该保护环境。种树并且节约用水。',s:'Study hard and you will have more opportunities.',sc:'努力学习，你就会有更多机会。'},
+      6:{t:'Success comes from hard work. Set a goal and never give up.',cn:'成功来自努力。定下目标，并且永不放弃。',s:'Diligence and perseverance make your dream come true.',sc:'勤奋和毅力让你的梦想成真。'}
+    };
+    // 脑筋急转弯题库（每日随机 2 题，适合小学生）
+    const BRAIN_TEASERS = [
+      {q:'什么东西越洗越脏？',a:'水。因为水洗东西时，脏东西都跑到水里去了。'},
+      {q:'什么门永远关不上？',a:'球门。因为比赛时球要进进出出呀。'},
+      {q:'什么布剪不断？',a:'瀑布。瀑布是流动的水，像布一样却剪不断。'},
+      {q:'大象的左耳朵像什么？',a:'像右耳朵。两只耳朵长得很像。'},
+      {q:'什么书不可能在书店里买到？',a:'秘书、遗书、天书（答案合理即可）。'},
+      {q:'小明从一楼走到三楼要 6 分钟，照这样走到六楼要几分钟？',a:'15 分钟。从一楼到三楼走 2 层用 6 分钟，每层 3 分钟；到六楼要走 5 层，5×3=15 分钟。'},
+      {q:'一年四季都盛开的花是什么花？',a:'塑料花。它不会凋谢。'},
+      {q:'什么海不产鱼？',a:'辞海（或书海、脑海）。它们是比喻，不是真的大海。'},
+      {q:'一个人空肚子最多能吃几个鸡蛋？',a:'一个。因为吃了一个后就不是空肚子了。'},
+      {q:'什么车没有人能开？',a:'风车。它靠风吹动，不需要人驾驶。'},
+      {q:'什么蛋打不烂，煮不熟，更不能吃？',a:'考试得的零蛋（零分）。'},
+      {q:'黑人为什么喜欢吃白色巧克力？',a:'因为他怕咬到自己的手指。'},
+      {q:'盆里有 6 个馒头，6 个小朋友每人分到 1 个，但盆里还剩 1 个，为什么？',a:'最后一个小朋友连盆一起拿走了。'},
+      {q:'你能做，我能做，大家都做；一个人能做，两个人不能一起做。这是做什么？',a:'做梦。一个人睡觉可以做梦，两个人一起睡觉不能同时做同一个梦。'},
+      {q:'什么动物最没有方向感？',a:'麋鹿（迷路）。谐音：麋鹿听起来像“迷路”。'},
+      {q:'什么字大家看了都说没用？',a:'“错”字。大家都会说“错了，没用”。'},
+      {q:'什么时候太阳会从西边出来？',a:'发誓的时候。人们常说“除非太阳从西边出来”。'},
+      {q:'早晨醒来，每个人都要做的第一件事是什么？',a:'睁开眼睛。醒来第一件事就是睁眼。'}
+    ];
+    // 语文每日拓展题库（古诗/阅读/字谜等）
+    const CN_EXTRA = {
+      1:[{q:'“远看山有色，近听水无声”描写的是哪一类事物？',idea:'从“有颜色却听不到声音”判断，它不是真正的山水。',ans:'画。这两句诗描写的是一幅画，画中的山有颜色、水却没有声音。'},
+         {q:'下面哪个字谜的谜底是“日”？',idea:'“日”字去掉一横是“口”，加一横是“目”或“旦”。',ans:'“画时圆，写时方，冬时短，夏时长”——谜底是“日”。'},
+         {q:'“一”加一笔不能变成哪个字？',idea:'想一想“一”加一笔可以组成哪些常用字。',ans:'不能变成“口”。（加一笔可变成二、十、厂、丁等，但不能变成口。）'}],
+      2:[{q:'“欲穷千里目，更上一层楼”告诉我们什么道理？',idea:'诗句字面是“想看得更远，就要站得更高”，引申为努力向上。',ans:'要想取得更大进步，就要付出更多努力，站得更高、看得更远。'},
+         {q:'“春眠不觉晓”中“晓”是什么意思？',idea:'“春眠不觉晓”指春天睡得香，不知不觉天就亮了。',ans:'“晓”是早晨、天明的意思。'},
+         {q:'下面哪个成语表示“自己欺骗自己”？',idea:'回忆成语故事中谁捂住自己的耳朵去偷铃铛。',ans:'掩耳盗铃。'}],
+      3:[{q:'“停车坐爱枫林晚”中“坐”是什么意思？',idea:'这里的“坐”不是“坐下”，而是表示原因。',ans:'“坐”是“因为”的意思。诗人因为喜爱傍晚的枫林才停车观赏。'},
+         {q:'《望庐山瀑布》中哪一句用了夸张手法？',idea:'夸张就是故意把事物说得很高大、很长、很多。',ans:'“飞流直下三千尺，疑是银河落九天”用了夸张手法。'},
+         {q:'“三人行，必有我师焉”是谁说的？',idea:'这句话出自《论语》，记录的是孔子及其弟子言行。',ans:'孔子。'}],
+      4:[{q:'“横看成岭侧成峰，远近高低各不同”说明什么道理？',idea:'从不同的角度看同一座山，样子会不同。',ans:'看事物要从多个角度去观察，不能只看一面。'},
+         {q:'“山重水复疑无路，柳暗花明又一村”常用来比喻什么？',idea:'当路好像走不通时，突然出现转机。',ans:'比喻在困境中坚持，往往会出现新的希望和转机。'},
+         {q:'“故人西辞黄鹤楼”中的“故人”指的是谁？',idea:'这首诗是李白送孟浩然去广陵，标题就是《黄鹤楼送孟浩然之广陵》。',ans:'孟浩然。'}],
+      5:[{q:'“春风又绿江南岸”中“绿”字为什么用得好？',idea:'“绿”本来是形容词，这里作动词，写出春风吹绿大地的动态。',ans:'“绿”字把春风写得像画家一样，把江南大地染绿了，生动形象。'},
+         {q:'《秋思》中“行人临发又开封”表现了诗人什么心情？',idea:'信要寄出时又拆开，说明还有说不完的话、不放心。',ans:'表现了诗人对家乡和亲人深深的思念与牵挂。'},
+         {q:'“不拘一格降人才”中“不拘一格”是什么意思？',idea:'“格”指规格、标准，“不拘一格”就是不局限于一种方式。',ans:'不局限于一种规格或方式，要大胆选拔各种各样的人才。'}],
+      6:[{q:'《石灰吟》中诗人借石灰表达了什么志向？',idea:'石灰“烈火焚烧”“粉骨碎身”都不怕，只留下清白。',ans:'诗人借石灰表达了自己不畏艰难、坚守高洁品格的志向。'},
+         {q:'“千磨万击还坚劲，任尔东西南北风”赞颂了什么精神？',idea:'竹子经历无数磨难和风吹雨打，仍然坚韧挺拔。',ans:'赞颂了顽强不屈、不怕打击的坚韧精神。'},
+         {q:'“我劝天公重抖擞，不拘一格降人才”表达了诗人怎样的愿望？',idea:'诗人希望社会变革，打破沉闷，涌现人才。',ans:'表达了诗人希望国家变革图强、重视人才的强烈愿望。'}]
+    };
+    // 奥数/加难度思维题库（每日一题，含解题思路 + 答案，点击显示）
+    const MATH_OLYMPIAD = {
+      1:[{q:'小明和小红共有 12 支铅笔，小明给小红 2 支后，两人一样多。原来小明有几支？',idea:'给完后两人一样多，说明每人 6 支；小明给出去 2 支后才是 6 支，所以原来要加回来。',ans:'原来小明有 8 支。（12÷2=6，6+2=8）'},
+         {q:'把 10 个苹果放到 3 个盘子里，每个盘子至少放 1 个，其中有一个盘子最多放几个？',idea:'要让一个盘子尽量多，其他两个盘子尽量少。',ans:'最多放 8 个。其他两个盘子各放 1 个，10-1-1=8。'}],
+      2:[{q:'一根木头锯成 5 段要锯几次？如果每次用 3 分钟，一共要几分钟？',idea:'段数比锯的次数多 1。',ans:'锯 4 次。4×3=12 分钟。'},
+         {q:'一个数加上 8，再减去 5，结果是 20。这个数是多少？',idea:'倒推：从结果 20 先加回减去的 5，再减去除加的 8。',ans:'这个数是 17。（20+5-8=17）'}],
+      3:[{q:'学校有一条 48 米长的路，从头到尾每隔 6 米种一棵树，一共种多少棵？',idea:'“从头到尾”说明两端都种，棵数 = 间隔数 + 1。',ans:'48÷6=8 个间隔，8+1=9 棵。'},
+         {q:'有 3 个小朋友，每两人握一次手，一共握几次手？',idea:'给小朋友编号 A、B、C，列出所有两人组合。',ans:'3 次：AB、AC、BC。'}],
+      4:[{q:'四个连续自然数的和是 70，这四个数分别是多少？',idea:'连续自然数可表示为 n、n+1、n+2、n+3，和为 4n+6。',ans:'平均数=70÷4=17.5，所以中间两个数是 17、18，四个数为 16、17、18、19。'},
+         {q:'一个长方形周长是 36 厘米，长是宽的 2 倍，长和宽各是多少？',idea:'周长 = 2×(长+宽)，先求长+宽，再用和倍关系。',ans:'长+宽=18 厘米；宽=18÷(2+1)=6 厘米，长=12 厘米。'}],
+      5:[{q:'有一个分数，分子加 1 等于 1/2，分母加 1 等于 1/3，这个分数是多少？',idea:'设原分数为 a/b，列两个方程试算，或用“代入排除法”。',ans:'3/8。验证：分子加 1 得 4/8=1/2；分母加 1 得 3/9=1/3。'},
+         {q:'甲、乙、丙三人分糖果，甲比乙多 3 颗，乙比丙多 3 颗，三人共 54 颗，丙有多少颗？',idea:'以丙为基准，设丙为 x，则乙 x+3，甲 x+6。',ans:'丙有 15 颗。x+(x+3)+(x+6)=54，3x=45，x=15。'}],
+      6:[{q:'一只钟表，分针和时针在 24 小时内重合多少次？',idea:'大约每 1 小时 5 分重合一次，但 11 点到 1 点之间只在 12 点重合一次。',ans:'22 次。（12 小时内重合 11 次，24 小时重合 22 次）'},
+         {q:'一个正方体的六个面分别写着 1~6，相对两个面的数字之和都相等，和是多少？',idea:'1+2+3+4+5+6=21，三对相对面，每对和相等。',ans:'每对和为 21÷3=7。'}]
+    };
+    // 英语每日拓展题库（阅读/听力小拓展）
+    const EN_EXTRA = {
+      1:[{q:'Look at the picture. It is a red apple on a green tree. What color is the apple?',idea:'Listen for the color word: red.',ans:'The apple is red.'},
+         {q:'Listen: "I have a cat. It is small." Is the cat big or small?',idea:'Key word: small.',ans:'The cat is small.'}],
+      2:[{q:'Tom goes to school by bike. How does Tom go to school?',idea:'Listen for the way of going: by bike.',ans:'Tom goes to school by bike.'},
+         {q:'Read: "My friend is kind. We help each other." What do they do?',idea:'Key sentence: We help each other.',ans:'They help each other.'}],
+      3:[{q:'Listen: "My mother is a teacher. She likes reading books." What does her mother like?',idea:'Key phrase: likes reading books.',ans:'Her mother likes reading books.'},
+         {q:'Read: "We should save water every day." What should we save?',idea:'Key word: water.',ans:'We should save water.'}],
+      4:[{q:'Read: "Last weekend we climbed the mountain. The air was fresh." How was the air?',idea:'Key adjective: fresh.',ans:'The air was fresh.'},
+         {q:'Listen: "We took many photos on the trip." What did they take?',idea:'Key phrase: took many photos.',ans:'They took many photos.'}],
+      5:[{q:'Read: "We can plant trees and ride bikes to protect the environment." Name one thing we can do.',idea:'Key actions: plant trees or ride bikes.',ans:'We can plant trees. / We can ride bikes.'},
+         {q:'Listen: "Study hard, and you will have more opportunities." What should you do?',idea:'Key phrase: study hard.',ans:'You should study hard.'}],
+      6:[{q:'Read: "Success comes from hard work and a strong will." What brings success?',idea:'Key words: hard work and a strong will.',ans:'Hard work and a strong will bring success.'},
+         {q:'Listen: "Set a goal, make a plan, and never give up." What should we never do?',idea:'Key phrase: never give up.',ans:'We should never give up.'}]
+    };
+    // 科学小实验题库（每日更新，难度按年级递增：1年级最易，6年级最难）
+    const SCIENCE_EXP = {
+      1:[
+        {t:'彩虹糖开花',mat:'一盘彩虹糖、温水、一个浅盘。',steps:'把彩虹糖围成一圈摆在盘里，缓缓倒入温水没过糖的一半，静置观察。',why:'糖遇水溶解并向四周扩散，不同颜色的水相遇，像一朵彩虹花。'},
+        {t:'倒扣不湿的纸',mat:'一个玻璃杯、一张纸巾、一盆水。',steps:'把纸巾塞进杯底，杯口朝下竖直压入水中，再竖直拿出。',why:'杯子里有空气，空气占据空间把水挡住，所以杯底的纸巾不会湿。'},
+        {t:'浮起来的乒乓球',mat:'一个装水的透明瓶、一个乒乓球。',steps:'把乒乓球放在水面上，用手把它按到水底再松手。',why:'水的浮力把乒乓球往上托，浮力大于重力，球就浮回水面。'}
+      ],
+      2:[
+        {t:'盐水浮鸡蛋',mat:'一杯清水、一个生鸡蛋、盐、勺子。',steps:'把鸡蛋放清水里会沉底；慢慢加盐搅拌，鸡蛋渐渐浮起。',why:'加盐后水变“重”（密度变大），浮力随之变大，就能把鸡蛋托起来。'},
+        {t:'气球小静电',mat:'一个气球、小纸片。',steps:'把气球在头发或衣服上快速摩擦几下，靠近小纸片。',why:'摩擦让气球带上静电，能吸引轻小的纸片，这就是静电现象。'},
+        {t:'火山小喷发',mat:'小苏打、白醋、洗洁精、一个小瓶。',steps:'瓶里放小苏打和洗洁精，倒入白醋，立刻冒出许多泡沫。',why:'小苏打（碱性）和白醋（酸性）相遇产生二氧化碳气体，把泡沫“喷”出来，像小火山。'}
+      ],
+      3:[
+        {t:'折断的筷子',mat:'一根筷子、半杯清水、一个透明杯。',steps:'把筷子斜插进有水的杯子，从侧面看筷子像断了一截。',why:'光从水进入空气时方向发生偏折，这叫光的折射，所以看起来筷子“弯”了。'},
+        {t:'自制“灭火器”',mat:'小苏打、白醋、一个玻璃杯、一支点燃的蜡烛。',steps:'杯里放小苏打倒白醋，把冒出的气体轻轻倒向蜡烛火苗。',why:'反应产生二氧化碳，它比空气重且不支持燃烧，能隔绝氧气把火“闷”灭。'},
+        {t:'洋葱表皮细胞',mat:'显微镜（或放大镜）、洋葱、碘液、载玻片。',steps:'撕一小片洋葱内表皮，滴碘液放在载玻片上，用显微镜观察。',why:'我们看到的一个个小格子就是细胞，细胞是生物体的基本结构单位。'}
+      ],
+      4:[
+        {t:'柠檬小电池',mat:'柠檬、铜片、锌片（或硬币和铁钉）、导线、小LED灯。',steps:'把铜片和锌片插进柠檬，用导线连到LED灯两端。',why:'柠檬里的酸让两种金属发生化学反应，产生微弱电流，点亮小灯。'},
+        {t:'三棱镜分彩虹',mat:'一块三棱镜、一束强光（太阳光或手电）。',steps:'让光斜射过三棱镜，在白纸上看出现的彩色光带。',why:'白光由多种颜色组成，不同颜色光折射角度不同，分开就成了彩虹。'},
+        {t:'种子发芽三要素',mat:'几粒豆子、棉花、水、两个小盘。',steps:'一盘加水放温暖处，一盘不加水；几天后观察哪盘发芽。',why:'种子发芽需要水、空气和适宜的温度，三者缺一不可。'}
+      ],
+      5:[
+        {t:'硬币浮水面',mat:'一枚硬币、一碗清水、镊子。',steps:'用镊子平放硬币在水面，硬币能“躺”在水上不沉。',why:'水表面的分子互相拉扯，形成表面张力，像一层薄膜托住了轻的硬币。'},
+        {t:'简易小电动机',mat:'电池、强磁铁、一段铜丝、回形针支架。',steps:'把铜丝弯成圈放在电池上，下端靠近磁铁，铜丝转起来。',why:'通电的铜丝在磁铁磁场里受到力而转动，这就是电动机的基本原理。'},
+        {t:'彩虹牛奶',mat:'牛奶、食用色素、洗洁精、棉签、盘子。',steps:'牛奶铺盘，滴几滴色素，用沾了洗洁精的棉签碰一下。',why:'洗洁精破坏牛奶表面张力，带动色素四处流动，画出彩色花纹。'}
+      ],
+      6:[
+        {t:'磁生电小灯',mat:'线圈、强磁铁、LED灯、导线。',steps:'把磁铁快速在线圈里来回插拔，灯一闪一闪亮起。',why:'磁铁运动使穿过线圈的磁力线变化，产生感应电流，这叫电磁感应。'},
+        {t:'植物的汗',mat:'一盆枝叶、透明塑料袋、绳。',steps:'把塑料袋罩住几片叶子扎紧，放在阳光下，袋内壁出现水珠。',why:'植物通过叶片把水分以水蒸气形式散出，叫蒸腾作用，水珠就是它的“汗”。'},
+        {t:'神奇的非牛顿流体',mat:'玉米淀粉、水、盘子。',steps:'把玉米淀粉和水调成糊，用手指轻戳会陷进去，用力捶却像固体。',why:'这种流体受的力越大越“硬”（剪切增稠），所以慢是液、快是固。'}
+      ]
+    };
+    // 看图写话扩展题型（2道/年级：选词填空、连词成句）
+    const PIC_EXT = {
+      1:[{q:'图上画的是一只（ ）在晒太阳。',a:['小猫','小狗','小鸟'],c:'小猫',e:'图上是一只小猫。'},
+         {q:'把词语连成一句通顺的话：① 小猫 ② 在 ③ 晒太阳',a:['小猫在晒太阳。','在晒太阳小猫。','小猫晒太阳在。'],c:'小猫在晒太阳。',e:'正确的语序是：小猫在晒太阳。'}],
+      2:[{q:'小狗在树下（ ）。',a:['踢足球','打篮球','跳绳'],c:'踢足球',e:'图上的小狗在踢足球。'},
+         {q:'把词语连成一句通顺的话：① 小狗 ② 高兴 ③ 地 ④ 追',a:['小狗高兴地追。','高兴小狗地追。','小狗地追高兴。'],c:'小狗高兴地追。',e:'正确的语序是：小狗高兴地追。'}],
+      3:[{q:'下雨了，小红撑着（ ）回家。',a:['雨伞','太阳帽','风筝'],c:'雨伞',e:'下雨要打雨伞。'},
+         {q:'把词语连成一句通顺的话：① 小红 ② 先 ③ 收书 ④ 再撑伞',a:['小红先收书再撑伞。','小红收书先再撑伞。','先小红收书再撑伞。'],c:'小红先收书再撑伞。',e:'正确语序是：小红先收书再撑伞。'}],
+      4:[{q:'春天，湖边的（ ）开得粉粉的。',a:['桃花','雪花','浪花'],c:'桃花',e:'春天湖边桃花开。'},
+         {q:'“小船像一片叶子”这句话用了什么修辞？',a:['比喻','拟人','排比'],c:'比喻',e:'把“小船”比作“叶子”，是比喻。'}],
+      5:[{q:'消防员叔叔用什么工具灭火？',a:['水枪','扫帚','拖把'],c:'水枪',e:'消防员用水枪灭火。'},
+         {q:'火扑灭后，大家松了一口气。这句话说明大家心情（ ）。',a:['放心了','更紧张了','更生气了'],c:'放心了',e:'危险解除，大家放心了。'}],
+      6:[{q:'描写城市夜晚时，路灯“排着队守护街道”用了什么修辞？',a:['拟人','比喻','夸张'],c:'拟人',e:'把路灯当作人来写，是拟人。'},
+         {q:'把词语连成一句通顺的话：① 汽车 ② 像 ③ 流动的星星 ④ 在马路上',a:['汽车在马路上像流动的星星。','像流动的星星汽车在马路上。','在马路上像流动的星星汽车。'],c:'汽车在马路上像流动的星星。',e:'正确语序是：汽车在马路上像流动的星星。'}]
+    };
+    // 控笔训练额外题型（汉字结构 + 偏旁部首）
+    const WRITING_EXTRA = {
+      1:[{q:'“口”字是（ ）结构？',a:['独体字','左右结构','上下结构'],c:'独体字',e:'口是独体字，不能再拆分偏旁。'},
+         {q:'“打”字的偏旁是（ ）？',a:['提手旁','足字旁','言字旁'],c:'提手旁',e:'打=扌+丁，偏旁是提手旁。'}],
+      2:[{q:'“森”字是（ ）结构？',a:['品字结构','左右结构','上下结构'],c:'品字结构',e:'森由三个“木”组成，像“品”字。'},
+         {q:'“江”字的偏旁是（ ）？',a:['三点水','绞丝旁','木字旁'],c:'三点水',e:'江=氵+工，偏旁是三点水。'}],
+      3:[{q:'“早”字是（ ）结构？',a:['上下结构','左右结构','独体字'],c:'上下结构',e:'早=日+十，是上下结构。'},
+         {q:'“树”字的偏旁是（ ）？',a:['木字旁','提手旁','绞丝旁'],c:'木字旁',e:'树=木+对，偏旁是木字旁。'}],
+      4:[{q:'“想”字是（ ）结构？',a:['上下结构','左右结构','独体字'],c:'上下结构',e:'想=相+心，是上下结构。'},
+         {q:'“语”字的偏旁是（ ）？',a:['言字旁','女字旁','三点水'],c:'言字旁',e:'语=讠+吾，偏旁是言字旁。'}],
+      5:[{q:'“辨、辩、辫”三个字的相同部件是（ ）？',a:['辡','讠','纟'],c:'辡',e:'三个字的右部都是“辡”。'},
+         {q:'“辉煌”的“煌”偏旁是（ ），与什么有关？',a:['火字旁，与光/热有关','王字旁，与玉有关','土字旁，与土地有关'],c:'火字旁，与光/热有关',e:'煌=火+皇，火字旁，常表示明亮、光辉。'}],
+      6:[{q:'“器”字是（ ）结构？',a:['上中下/四口一犬','左右结构','独体字'],c:'上中下/四口一犬',e:'器由四个“口”包围中间的“犬”。'},
+         {q:'“德”字的偏旁是（ ）？',a:['彳','亻','忄'],c:'彳',e:'德=彳+㥁，左部是双人旁“彳”。'}]
+    };
+    // 教材学习要点（按年级）
+    const CONCEPT = {
+      chinese:{
+        1:'识字与朗读：学习拼音、基本笔画，朗读儿歌和古诗。',
+        2:'词语积累：近义词反义词、成语故事、写话起步。',
+        3:'段落与阅读：理解课文，学习比喻句，练习写一段话。',
+        4:'篇章读写：概括段意，学习修改病句与扩写。',
+        5:'阅读与习作：记事写人，学习简单的说明文。',
+        6:'综合素养：文言文启蒙，审题立意与谋篇布局。'
+      },
+      math:{
+        1:'20 以内加减法，认识钟表与简单图形。',
+        2:'100 以内加减、乘法口诀、平均分。',
+        3:'表内乘除、长度单位、简单分数。',
+        4:'万以内数、三位数加减、倍的认识。',
+        5:'小数加减、多边形面积、简易方程。',
+        6:'分数乘除、比和比例、圆柱与圆锥、百分数。'
+      },
+      english:{
+        1:'问候与自我介绍：Hello / I am...',
+        2:'学校与朋友：school, friend',
+        3:'家庭与职业：family, teacher',
+        4:'自然与爱好：mountain, exercise',
+        5:'环境与节日：environment, celebrate',
+        6:'理想与品质：dream, responsibility'
+      }
+    };
+
+    // ===================== 状态与存储 =====================
+    const SK='xx_tasks_v4';
+    let tasksData={}, currentSubject='chinese', currentPage='study', currentTaskDetail=null;
+    let userGrade=parseInt(localStorage.getItem('xx_grade')||'6',10);
+    if(!(userGrade>=1&&userGrade<=6)) userGrade=6;
+    let wrongBook=[], rewards=[], dailyFlags={}, checkinLog={}, plans=[], answerStats={};
+    function loadAll(){
+      try{ const r=localStorage.getItem(SK); if(r) tasksData=JSON.parse(r); }catch(e){}
+      if(!tasksData||!tasksData.chinese){
+        tasksData={};
+        for(const k in SUBJECTS){
+          tasksData[k]={tasks:SUBJECTS[k].tasks.map((t,i)=>({id:Date.now()+i,name:t.name,type:t.type,streak:0,completed:false,completedDate:null}))};
+        }
+      }
+      // 版本更新时把新增默认任务合并进老用户数据
+      ensureDefaultTasks();
+      try{ wrongBook=JSON.parse(localStorage.getItem('xx_wrong')||'[]'); }catch(e){ wrongBook=[]; }
+      try{ rewards=JSON.parse(localStorage.getItem('xx_rewards')||'[]'); }catch(e){ rewards=[]; }
+      try{ dailyFlags=JSON.parse(localStorage.getItem('xx_flags')||'{}'); }catch(e){ dailyFlags={}; }
+      try{ checkinLog=JSON.parse(localStorage.getItem('xx_checkin')||'{}'); }catch(e){ checkinLog={}; }
+      try{ plans=JSON.parse(localStorage.getItem('xx_plans')||'[]'); }catch(e){ plans=[]; }
+      try{ answerStats=JSON.parse(localStorage.getItem('xx_stats')||'{}'); }catch(e){ answerStats={}; }
+    }
+    function ensureDefaultTasks(){
+      for(const k in SUBJECTS){
+        if(!tasksData[k]) tasksData[k]={tasks:[]};
+        const arr=tasksData[k].tasks;
+        SUBJECTS[k].tasks.forEach((t,i)=>{
+          if(!arr.find(x=>x.type===t.type)){
+            arr.push({id:Date.now()+i*1000+Math.floor(Math.random()*1000),name:t.name,type:t.type,streak:0,completed:false,completedDate:null});
+          }
+        });
+      }
+    }
+    function saveTasks(){ try{ localStorage.setItem(SK,JSON.stringify(tasksData)); }catch(e){} }
+    function saveWrong(){ try{ localStorage.setItem('xx_wrong',JSON.stringify(wrongBook)); }catch(e){} }
+    function saveRewards(){ try{ localStorage.setItem('xx_rewards',JSON.stringify(rewards)); }catch(e){} }
+    function saveFlags(){ try{ localStorage.setItem('xx_flags',JSON.stringify(dailyFlags)); }catch(e){} }
+    function saveCheckin(){ try{ localStorage.setItem('xx_checkin',JSON.stringify(checkinLog)); }catch(e){} }
+    function savePlans(){ try{ localStorage.setItem('xx_plans',JSON.stringify(plans)); }catch(e){} }
+    function saveStats(){ try{ localStorage.setItem('xx_stats',JSON.stringify(answerStats)); }catch(e){} }
+    function saveAll(){ saveTasks(); saveWrong(); saveRewards(); saveFlags(); saveCheckin(); savePlans(); saveStats(); try{ localStorage.setItem('xx_grade',String(userGrade)); }catch(e){} maybeAutoSync(); }
+
+    // ===================== 工具 =====================
+    function dayIndex(){ const d=new Date(); return Math.floor((d-new Date(d.getFullYear(),0,0))/86400000); }
+    function pick(arr){ if(!arr||!arr.length) return null; return arr[dayIndex()%arr.length]; }
+    function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i];a[i]=a[j];a[j]=t; } return a; }
+    function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+    function getToday(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function getYesterday(){ const d=new Date(); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'’'); }
+
+    // ===================== 语音（朗读 / 跟读） =====================
+    let voiceZh=null, voiceEn=null, voicesReady=false;
+    function loadVoices(){
+      if(!('speechSynthesis' in window)) return;
+      const vs=window.speechSynthesis.getVoices();
+      if(!vs||!vs.length) return;
+      voicesReady=true;
+      voiceZh=vs.find(v=>/^zh[-_]?(CN|Hans|TW)?/i.test(v.lang)) || vs.find(v=>/zh|cmn|chinese|中文|普通话|国语/i.test(v.lang+' '+v.name)) || null;
+      voiceEn=vs.find(v=>/^en[-_]US/i.test(v.lang)) || vs.find(v=>/^en[-_]GB/i.test(v.lang)) || vs.find(v=>/^en/i.test(v.lang)) || null;
+    }
+    if('speechSynthesis' in window){ window.speechSynthesis.onvoiceschanged=loadVoices; loadVoices(); }
+    function speakText(text,lang){
+      if(!text) return;
+      if(!('speechSynthesis' in window)){ showToast('当前浏览器不支持朗读'); return; }
+      try{ window.speechSynthesis.cancel(); }catch(e){}
+      const u=new SpeechSynthesisUtterance(text);
+      const isEn=lang&&lang.indexOf('en')>=0;
+      u.lang=isEn?'en-US':'zh-CN';
+      u.rate=isEn?0.82:0.9; u.pitch=1;
+      if(voicesReady){
+        if(isEn&&voiceEn) u.voice=voiceEn;
+        if(!isEn&&voiceZh) u.voice=voiceZh;
+      }
+      try{ window.speechSynthesis.speak(u); }catch(e){}
+    }
+    function speakMath(text){
+      let s=(text||'').toString();
+      // 分数：3/4 -> 四分之三（先处理，避免与除号混淆）
+      s=s.replace(/(\d+)\s*\/\s*(\d+)/g,(m,n,d)=>d+'分之'+n);
+      // 比：3:4 -> 三比四
+      s=s.replace(/(\d+)\s*[:：]\s*(\d+)/g,(m,a,b)=>a+'比'+b);
+      // 运算符号转中文读法（修复「减号读成至」问题）
+      s=s.replace(/-/g,'减').replace(/−/g,'减').replace(/－/g,'减');
+      s=s.replace(/\+/g,'加').replace(/×/g,'乘').replace(/÷/g,'除以');
+      s=s.replace(/=/g,'等于').replace(/\?/g,'多少').replace(/%/g,'百分之');
+      speakText(s,'zh-CN');
+    }
+    function speakSub(text,sub){ if(sub==='数学') speakMath(text); else speakText(text, sub==='英语'?'en-US':'zh-CN'); }
+    // 中英文连续朗读（用于「英文后跟英译汉」「中文前加英文」等场景）
+    function speakSeq(parts){
+      if(!parts||!parts.length) return;
+      if(!('speechSynthesis' in window)){ showToast('当前浏览器不支持朗读'); return; }
+      try{ window.speechSynthesis.cancel(); }catch(e){}
+      let i=0;
+      function speakOne(){
+        if(i>=parts.length) return;
+        const p=parts[i++];
+        const u=new SpeechSynthesisUtterance(p.text||'');
+        const isEn=(p.lang||'').indexOf('en')>=0;
+        u.lang=isEn?'en-US':'zh-CN'; u.rate=isEn?0.82:0.9; u.pitch=1;
+        if(voicesReady){ if(isEn&&voiceEn)u.voice=voiceEn; if(!isEn&&voiceZh)u.voice=voiceZh; }
+        const dur=(p.text?p.text.length:0)*(isEn?240:180)+500;
+        try{ window.speechSynthesis.speak(u); }catch(e){}
+        setTimeout(speakOne, dur);
+      }
+      speakOne();
+    }
+    function speakCnEn(cn,en){ speakSeq([{text:cn,lang:'zh-CN'},{text:en,lang:'en-US'}]); }
+    function speakEnCn(en,cn){ speakSeq([{text:en,lang:'en-US'},{text:cn,lang:'zh-CN'}]); }
+    function speakQ(btn,lang,cn){ const el=btn.closest('.q-text').querySelector('.q-body'); if(el){ if((lang==='en-US')&&cn){ speakEnCn(el.textContent,cn); } else if(lang==='math'){ speakMath(el.textContent); } else { speakText(el.textContent,lang); } } }
+    function speakCurrentSubject(){ const c=SUBJECTS[currentSubject]; speakText(c.name+'，'+c.subtitle,'zh-CN'); }
+
+    let recognition=null;
+    function startRepeat(id,sentence){
+      if(!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window)){ showToast('当前浏览器不支持跟读，已播放标准读音'); speakText(sentence,'en-US'); return; }
+      const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+      if(!recognition){ recognition=new SR(); recognition.lang='en-US'; recognition.interimResults=false; recognition.maxAlternatives=1; }
+      const mic=document.getElementById('mic-'+id);
+      const fb=document.getElementById('fb-'+id);
+      if(mic) mic.classList.add('recording');
+      speakText(sentence,'en-US');
+      setTimeout(()=>{ try{ recognition.start(); }catch(e){ try{recognition.stop();}catch(_){} setTimeout(()=>{try{recognition.start();}catch(_){}},250); } },900);
+      recognition.onresult=(e)=>{
+        if(mic) mic.classList.remove('recording');
+        let said='';
+        try{ said=(e.results[0][0].transcript||'').toLowerCase().trim(); }catch(_){ said=''; }
+        const t=sentence.toLowerCase();
+        const lastWord=(said.split(' ').pop()||'');
+        const ok=(t.includes(lastWord)&&lastWord.length>0) || similarity(said,t)>0.6;
+        if(fb){ fb.textContent=ok?'✅ 发音很棒！你读的是：'+said:'🔁 你读的是：'+said+'，再跟读一次：'+sentence; fb.className='repeat-fb '+(ok?'good':'try'); }
+        showToast(ok?'跟读正确！':'再跟读一次吧');
+      };
+      recognition.onerror=()=>{ if(mic) mic.classList.remove('recording'); if(fb){ fb.textContent='识别失败，请重试'; fb.className='repeat-fb try'; } };
+      recognition.onend=()=>{ if(mic) mic.classList.remove('recording'); };
+    }
+    function similarity(s1,s2){ const lo=s1.length>s2.length?s1:s2, sh=s1.length>s2.length?s2:s1; if(lo.length===0) return 1; const c=[]; for(let i=0;i<=sh.length;i++){ let lv=i; for(let j=0;j<=lo.length;j++){ if(i===0) c[j]=j; else if(j>0){ let nv=c[j-1]; if(sh[i-1]!==lo[j-1]) nv=Math.min(Math.min(nv,lv),c[j])+1; c[j-1]=lv; lv=nv; } } if(i>0) c[lo.length]=lv; } return (lo.length-c[lo.length])/lo.length; }
+
+    // ===================== 页面与导航 =====================
+    function switchPage(page){
+      currentTaskDetail=null; currentPage=page;
+      document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+      const nav=document.querySelector(`.nav-item[data-page="${page}"]`); if(nav) nav.classList.add('active');
+      document.querySelectorAll('.placeholder-page').forEach(el=>el.classList.remove('active'));
+      const studyPage=document.getElementById('study-page');
+      const fab=document.getElementById('fab');
+      if(page==='study'){
+        studyPage.style.display='block'; fab.style.display='flex';
+        document.getElementById('page-title').textContent='每日一练';
+        renderStudyHome();
+      } else {
+        studyPage.style.display='none'; fab.style.display='none';
+        const navText=document.querySelector(`.nav-item[data-page="${page}"]`).innerText;
+        document.getElementById('page-title').textContent=navText.split('\n')[0];
+        const ph=document.getElementById('page-'+page); if(ph) ph.classList.add('active');
+        if(page==='errors') renderWrongBook();
+        if(page==='plants') renderPlants();
+        if(page==='rewards') renderRewards();
+        if(page==='stats') renderStats();
+        if(page==='english') renderDailyEnglish();
+        if(page==='brain') renderBrain();
+        if(page==='science') renderScience();
+        if(page==='plans') renderPlans();
+      }
+      if(window.innerWidth<=768) closeSidebar();
+    }
+    function goBack(){
+      if(currentTaskDetail){ closeTaskDetail(); return; }
+      if(currentPage!=='study'){ switchPage('study'); }
+    }
+    function switchSubject(sub){
+      currentSubject=sub;
+      document.querySelectorAll('.subject-tab').forEach(el=>el.classList.remove('active'));
+      document.querySelector(`.subject-tab[data-sub="${sub}"]`).classList.add('active');
+      renderSubjectHeader(); renderTasks();
+    }
+    function setGrade(g){
+      userGrade=g; try{ localStorage.setItem('xx_grade',String(g)); }catch(e){}
+      renderStudyHome();
+      showToast('已切换到 '+g+' 年级');
+    }
+
+    // ===================== 学习主页渲染 =====================
+    function renderStudyHome(){
+      const home=document.getElementById('study-home');
+      const cfg=SUBJECTS[currentSubject];
+      let gradeBtns='';
+      for(let g=1;g<=6;g++){ gradeBtns+=`<button class="grade-btn ${g===userGrade?'active':''}" onclick="setGrade(${g})">${g}年级</button>`; }
+      home.innerHTML=`
+        <div class="grade-bar"><span class="label">当前年级（河北教材）</span>${gradeBtns}</div>
+        <div class="subject-tabs">
+          <div class="subject-tab ${currentSubject==='chinese'?'active':''}" data-sub="chinese" onclick="switchSubject('chinese')"><span class="emoji">📖</span><span class="label">语文</span></div>
+          <div class="subject-tab ${currentSubject==='math'?'active':''}" data-sub="math" onclick="switchSubject('math')"><span class="emoji">🔢</span><span class="label">数学</span></div>
+          <div class="subject-tab ${currentSubject==='english'?'active':''}" data-sub="english" onclick="switchSubject('english')"><span class="emoji">🔠</span><span class="label">英语</span></div>
+        </div>
+        <div class="subject-card">
+          <div class="subject-icon ${cfg.colorClass}" id="subject-icon">${cfg.emoji}</div>
+          <div class="subject-info">
+            <div class="subject-name"><span id="subject-name">${cfg.name}</span><button class="speak-btn" onclick="speakCurrentSubject()">🔊</button></div>
+            <div class="subject-subtitle" id="subject-subtitle">${cfg.subtitle} · 每日任务 <span id="task-progress-text">0/0</span></div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+            <div class="progress-text" id="progress-percent">今日完成 0%</div>
+          </div>
+        </div>
+        <div class="section-title"><h2>每日任务（点击进入）</h2><span class="task-count" id="task-count">0/0</span></div>
+        <div class="task-list" id="task-list"></div>
+      `;
+      renderTasks();
+    }
+    function renderSubjectHeader(){
+      const cfg=SUBJECTS[currentSubject];
+      document.getElementById('subject-icon').textContent=cfg.emoji;
+      document.getElementById('subject-icon').className=`subject-icon ${cfg.colorClass}`;
+      document.getElementById('subject-name').textContent=cfg.name;
+      document.getElementById('subject-subtitle').innerHTML=`${cfg.subtitle} · 每日任务 <span id="task-progress-text">0/0</span>`;
+      updateProgress();
+    }
+    function renderTasks(){
+      const list=document.getElementById('task-list'); if(!list) return;
+      const tasks=tasksData[currentSubject].tasks;
+      list.innerHTML='';
+      if(tasks.length===0){
+        list.innerHTML=`<div class="empty-state"><div class="emoji">🌱</div><div>还没有任务，点击右下角加号添加吧</div></div>`;
+        updateProgress(); return;
+      }
+      tasks.forEach(t=>{
+        const el=document.createElement('div');
+        el.className=`task-item ${t.completed?'completed':''}`;
+        el.innerHTML=`
+          <div class="task-checkbox" onclick="event.stopPropagation();toggleTask(${t.id})">${t.completed?'✓':''}</div>
+          <div class="task-content">
+            <div class="task-name">${t.name}</div>
+            <div class="task-meta"><span class="streak">🔥 连续 ${t.streak} 天</span>${t.completed?'<span class="done-badge">✓ 今日已完成</span>':''}</div>
+          </div>
+          <div class="task-delete" class="task-enter" style="color:var(--danger);margin-right:8px;cursor:pointer;font-size:18px;" title="删除" onclick="event.stopPropagation();deleteTask(${t.id})">🗑</div>
+          <div class="task-enter">进入 ›</div>
+        `;
+        el.onclick=()=>openTask(t.id);
+        list.appendChild(el);
+      });
+      updateProgress();
+    }
+    function updateProgress(){
+      const tasks=tasksData[currentSubject].tasks;
+      const total=tasks.length, done=tasks.filter(t=>t.completed).length;
+      const pct=total===0?0:Math.round(done/total*100);
+      const pf=document.getElementById('progress-fill'); if(pf) pf.style.width=pct+'%';
+      const pt=document.getElementById('progress-percent'); if(pt) pt.textContent=`今日完成 ${pct}%`;
+      const tc=document.getElementById('task-count'); if(tc) tc.textContent=`${done}/${total}`;
+      const tpt=document.getElementById('task-progress-text'); if(tpt) tpt.textContent=`${done}/${total}`;
+      checkAllDone();
+    }
+    function toggleTask(id){
+      const t=tasksData[currentSubject].tasks.find(x=>x.id===id); if(!t) return;
+      const today=getToday(), yest=getYesterday();
+      t.completed=!t.completed;
+      if(t.completed){
+        if(t.completedDate===yest) t.streak+=1; else if(t.completedDate!==today) t.streak=1;
+        t.completedDate=today;
+        showToast(`🎉 完成！连续 ${t.streak} 天`);
+      } else { t.completedDate=null; }
+      saveTasks(); renderTasks();
+    }
+    // 删除保护：必须输入固定数字 6 才能确认，避免小朋友误触误删
+    function confirmDelete(){
+      const v=prompt('为防止误删，请输入数字 6 确认删除：');
+      if(v===null) return false;
+      if(v.trim()!=='6'){ showToast('输入错误，未删除'); return false; }
+      return true;
+    }
+    function deleteTask(id){
+      const arr=tasksData[currentSubject].tasks;
+      const idx=arr.findIndex(x=>x.id===id);
+      if(idx<0) return;
+      const name=arr[idx].name;
+      if(!confirmDelete()) return;
+      arr.splice(idx,1);
+      saveTasks(); renderTasks();
+      showToast('已删除任务');
+    }
+    function openAddModal(){ document.getElementById('modal-overlay').style.display='flex'; setTimeout(()=>document.getElementById('new-task-input').focus(),50); }
+    function closeAddModal(e){ if(e&&e.target!==e.currentTarget) return; document.getElementById('modal-overlay').style.display='none'; document.getElementById('new-task-input').value=''; }
+    function confirmAddTask(){
+      const inp=document.getElementById('new-task-input'); const v=inp.value.trim();
+      if(!v){ showToast('请输入任务名称'); return; }
+      tasksData[currentSubject].tasks.push({id:Date.now(),name:v,type:'custom',streak:0,completed:false,completedDate:null});
+      saveTasks(); closeAddModal(); renderTasks();
+      showToast('已添加任务');
+    }
+
+    // ===================== 任务子页面 =====================
+    function openTask(id){
+      const t=tasksData[currentSubject].tasks.find(x=>x.id===id); if(!t) return;
+      currentTaskDetail={subject:currentSubject,type:t.type,name:t.name};
+      document.getElementById('study-home').style.display='none';
+      const d=document.getElementById('task-detail'); d.style.display='block';
+      let content='';
+      try{ content=renderTaskContent(currentSubject,t.type); }
+      catch(e){ content=`<div class="empty-state"><div class="emoji">⚠️</div><div>内容加载失败：${esc(e.message)}</div></div>`; }
+      if(!content) content=`<div class="empty-state"><div class="emoji">📭</div><div>暂无内容</div></div>`;
+      d.innerHTML=`<div class="detail-head"><div class="detail-back" onclick="closeTaskDetail()">‹ 返回</div><div class="detail-title">${esc(t.name)}</div></div>`+content;
+      if(userGrade<=3){ try{ setTimeout(()=>{ if(currentTaskDetail&&currentTaskDetail.type==='poem'&&window.lastPoemFull){ speakText(window.lastPoemFull,'zh-CN'); } else { speakText(t.name+'，点下面的小喇叭可以听题哦','zh-CN'); } },300); }catch(e){} }
+    }
+    function closeTaskDetail(){
+      currentTaskDetail=null;
+      document.getElementById('task-detail').style.display='none';
+      document.getElementById('study-home').style.display='block';
+    }
+    function renderTaskContent(sub,type){
+      if(sub==='chinese'){
+        if(type==='poem') return poemView();
+        if(type==='idiom') return idiomView();
+        if(type==='writing') return writingView();
+        if(type==='pinyin') return pinyinView();
+        if(type==='picture') return pictureView();
+        if(type==='cn_extra') return cnExtraView();
+      }
+      if(sub==='math'){
+        if(type==='math_oral') return mathOralView();
+        if(type==='math_sync') return mathSyncView();
+        if(type==='math_think') return mathThinkView();
+        if(type==='math_wrong') return mathWrongView();
+        if(type==='math_life') return mathLifeView();
+        if(type==='math_olympiad') return mathOlympiadView();
+      }
+      if(sub==='english'){
+        if(type==='en_word') return enWordView();
+        if(type==='en_text') return enTextView();
+        if(type==='en_write') return enWriteView();
+        if(type==='en_pattern') return enPatternView();
+        if(type==='en_phonics') return enPhonicsView();
+        if(type==='en_read') return enReadView();
+        if(type==='en_extra') return enExtraView();
+      }
+      if(type==='custom') return `<div class="card-box"><h3>✏️ 自定义任务</h3><div class="meaning">这是你添加的自定义任务。完成后点左侧圆圈打勾即可。可点下面的喇叭听任务名称：<button class="speak-btn" onclick="speakText('${esc(currentTaskDetail?currentTaskDetail.name:'任务')}','zh-CN')">🔊</button></div></div>`;
+      return '';
+    }
+
+    // 题目块（带朗读按钮，支持中文/英文，选项按 A/B/C/D 正规选择题格式）
+    const OPT_LETTERS = ['A','B','C','D','E','F'];
+    // 在已打乱的选项里找到正确答案对应的字母
+    function optLetterOf(correct, sopts){
+      const idx=sopts.indexOf(correct);
+      return (idx>=0)?(OPT_LETTERS[idx]||'·'):'·';
+    }
+    // 生成“答案+解析”区块：标注正确选项字母（A/B/C/D），并附朗读按钮
+    function mqExplain(correct, explain, sopts, lang){
+      const L=optLetterOf(correct, sopts);
+      const speakLang=(lang==='en-US')?'en-US':'zh-CN';
+      const speakTxt=explain? (correct+'。解析：'+explain) : correct;
+      return `<div class="q-explain"><b>答案：</b>${L}. ${correct}${explain?`　<b>解析：</b>${explain}`:''} <button class="speak-btn" onclick="speakText('${esc(speakTxt)}','${speakLang}')">🔊</button></div>`;
+    }
+    // 每日题库：按「年中第几天」从教材顺序取，保证当天一致、次日更新（跟教材同步）
+    function dayOfYear(){ const d=new Date(); const start=new Date(d.getFullYear(),0,0); return Math.floor((d-start)/86400000); }
+    function dailyPick(arr){ if(!arr||!arr.length) return null; return arr[dayOfYear()%arr.length]; }
+    function qBlock(num,text,opts,correct,explain,lang,cn){
+      lang=lang||'zh-CN';
+      const cnAttr=cn?esc(cn):'';
+      const cnShow=cn?`<span class="en-phon">（${cnAttr}）</span>`:'';
+      const sopts=shuffle(opts.slice());
+      let h=`<div class="q-item"><div class="q-text"><span class="q-num">${num}.</span><span class="q-body">${text}</span>${cnShow}<button class="speak-btn" onclick="speakQ(this,'${lang}','${cnAttr}')">🔊</button></div><div class="q-options">`;
+      sopts.forEach((o,i)=>{ h+=`<button class="opt" data-val="${esc(o)}" onclick="checkAnswer(this,'${esc(o)}','${esc(correct)}','${currentTaskDetail?currentTaskDetail.subject:''}',this.parentElement.parentElement,'${esc(explain||'')}')"><span class="opt-lab">${OPT_LETTERS[i]||'·'}</span>${o}</button>`; });
+      h+=`</div>`+mqExplain(correct, explain, sopts, lang)+`</div>`;
+      return h;
+    }
+    function allAnswersBtn(){ return `<div class="explain-btn" onclick="document.querySelectorAll('#task-detail .q-explain').forEach(e=>e.classList.add('show'))">显示全部答案 / 解析</div>`; }
+    function conceptCard(){ const c=CONCEPT[currentSubject]&&CONCEPT[currentSubject][userGrade]; return c?`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级 · 河北教材）</div><div class="meaning">${c}</div></div>`:''; }
+
+    // —— 语文 ——
+    function poemView(){
+      const arr=(POEMS[userGrade]||POEMS[1]).slice();
+      const p=dailyPick(arr)||arr[0];
+      const others=shuffle(arr.filter(x=>x.t!==p.t)).slice(0,2).map(x=>x.a).concat(p.a);
+      let h=`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级 · 今日古诗）</div><h3>《${p.t}》 <span style="font-weight:600;color:var(--text-secondary);font-size:14px;">${p.d}·${p.a}</span></h3>`;
+      h+=`<div class="poem-line">${p.lines.join('<br>')}</div>`;
+      const poemFull=`${p.d}代，作者${p.a}。《${p.t}》。${p.lines.join('，')}。`;
+      window.lastPoemFull=poemFull;
+      h+=`<div style="text-align:center;margin:12px 0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button class="speak-btn" style="width:auto;height:auto;padding:8px 16px;border-radius:20px;" onclick="speakText('${esc(poemFull)}','zh-CN')">🔊 朗读（朝代·作者·诗文）</button>
+        <button class="speak-btn" style="width:auto;height:auto;padding:8px 16px;border-radius:20px;" onclick="speakText('${esc(p.t)}。${p.lines.join('，')}','zh-CN')">🔊 朗读诗文</button>
+      </div>`;
+      h+=`<div class="meaning"><b>释义：</b>${p.m} <button class="speak-btn" onclick="speakText('${esc(p.m)}','zh-CN')">🔊 朗读释义</button></div></div>`;
+      h+=`<div class="card-box"><div class="h-tag">✍️ 题型训练（选择题）</div><h3>古诗小测验</h3>`;
+      h+=qBlock(1,`《${p.t}》的作者是谁？`,shuffle(others),p.a,'出自课本作家常识。');
+      h+=qBlock(2,'这首诗主要描写的是？',shuffle(['写景','思乡','送别','咏物']).slice(0,3),'写景','诗人借景抒情。');
+      h+=`<div class="meaning" style="margin-top:8px;">今日建议：大声朗读古诗、理解诗意；学有余力可背诵，并复习昨日一首。 <button class="speak-btn" onclick="speakText('今日建议：大声朗读古诗、理解诗意。学有余力可以背诵，并复习昨天学过的一首。','zh-CN')">🔊</button></div>`+allAnswersBtn()+`</div>`;
+      return h;
+    }
+    function idiomView(){
+      const arr=(IDIOMS[userGrade]||IDIOMS[1]).slice();
+      let h=`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级）</div><h3>💡 成语故事 / 好词好句</h3>`;
+      arr.forEach(it=>{ h+=`<div style="margin-bottom:14px;"><div class="idiom-name">${it.n}</div><div class="idiom-story">${it.s} <button class="speak-btn" onclick="speakText('${esc(it.n)}。${esc(it.s)}','zh-CN')">🔊</button></div><div class="idiom-mean">释义：${it.m} <button class="speak-btn" onclick="speakText('${esc(it.n)}，释义：${esc(it.m)}','zh-CN')">🔊</button></div></div>`; });
+      h+=`</div>`;
+      const qs=IDIOM_Q[userGrade]||IDIOM_Q[1];
+      h+=`<div class="card-box"><div class="h-tag">✍️ 题型训练（选词填空）</div><h3>成语运用</h3>`;
+      qs.forEach((it,i)=>{ h+=qBlock(i+1,it.q,it.a,it.c,it.e); });
+      h+=allAnswersBtn()+`</div>`;
+      return h;
+    }
+    function writingView(){
+      const arr=(WRITING[userGrade]||WRITING[1]).slice();
+      let h=`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级）</div><h3>✍️ 控笔训练 + 写字</h3><div style="display:flex;flex-wrap:wrap;justify-content:center;">`;
+      arr.forEach(c=>{
+        const py=WRITING_PINYIN[c]||'';
+        h+=`<div class="write-char">
+          <div class="write-pinyin">${py}</div>
+          <div class="big tianzi tianzi-model"><span class="tianzi-char">${c}</span></div>
+          <button class="speak-btn" style="margin-top:6px;" onclick="speakText('${esc(py)}　${c}','zh-CN')">🔊 拼读</button>
+        </div>`;
+      });
+      h+=`</div><div style="margin-top:12px;font-size:13px;color:var(--text-secondary);">上方红色四线三格为拼音书写规范；田字格中红色十字帮助定位中心与四边，请把汉字写在格正中间，注意笔顺与间架结构；点 🔊 可听拼音拼读与汉字读音。 <button class="speak-btn" onclick="speakText('上方红色四线三格是拼音书写规范。田字格里红色十字帮助定位中心和四边，请把汉字写在格子正中间，注意笔顺和间架结构。点小喇叭可以听拼音拼读和汉字读音。','zh-CN')">🔊</button></div></div>`;
+      const qs=WRITING_Q[userGrade]||WRITING_Q[1];
+      h+=`<div class="card-box"><div class="h-tag">✍️ 题型训练（笔顺笔画）</div><h3>我会写</h3>`;
+      qs.forEach((it,i)=>{ h+=qBlock(i+1,it.q,it.a,it.c,it.e); });
+      h+=allAnswersBtn()+`</div>`;
+      const we=WRITING_EXTRA[userGrade]||WRITING_EXTRA[1];
+      h+=`<div class="card-box"><div class="h-tag">✍️ 题型训练（汉字结构 · 偏旁部首）</div><h3>我懂字</h3>`;
+      we.forEach((it,i)=>{ h+=qBlock(i+1,it.q,it.a,it.c,it.e); });
+      h+=allAnswersBtn()+`</div>`;
+      return h;
+    }
+    function pinyinView(){
+      const arr=(PINYIN[userGrade]||PINYIN[1]).slice();
+      let h=`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级）</div><h3>🔤 今日拼音（听一听，读一读）</h3><div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">`;
+      arr.forEach(it=>{
+        h+=`<div class="pinyin-card"><div class="py">${it.syl}</div><div class="py-zh">${it.zh}</div><button class="speak-btn" style="margin-top:10px;" onclick="speakText('${esc(it.zh)}','zh-CN')">🔊 读汉字</button></div>`;
+      });
+      h+=`</div><div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">拼音在上、汉字在下，字更大；点 🔊 读汉字，自然朗读可正确表现轻声（如“妈妈”“爸爸”的第二个字读轻声）。</div></div>`;
+      h+=`<div class="card-box"><div class="h-tag">✍️ 题型训练（听读音，选汉字）</div><h3>拼音拼读练习</h3>`;
+      arr.forEach((it,i)=>{
+        const sopts=shuffle(it.opt);
+        h+=`<div class="q-item"><div class="q-text"><span class="q-num">${i+1}.</span><span class="q-body">听读音，选出正确的汉字</span><button class="speak-btn" onclick="speakText('${esc(it.zh)}','zh-CN')">🔊 播放读音</button></div><div class="q-options">`;
+        sopts.forEach((o,idx)=>{ h+=`<button class="opt" data-val="${esc(o)}" onclick="checkAnswer(this,'${esc(o)}','${esc(it.ans)}','语文·拼音',this.parentElement.parentElement,'拼音 ${esc(it.syl)} 对应的汉字是“${esc(it.zh)}”。')"><span class="opt-lab">${OPT_LETTERS[idx]||'·'}</span>${o}</button>`; });
+        h+=`</div>`+mqExplain(it.ans, `拼音 ${it.syl} 对应的汉字是“${it.zh}”。`, sopts, 'zh-CN')+`</div>`;
+      });
+      h+=allAnswersBtn()+`</div>`;
+      return h;
+    }
+    // 看图写话：根据年级画出真实场景（避免 emoji 与背景并列，让孩子直观看到画面）
+        function pictureSceneSVG(g){
+      const scenes={
+        1:`<defs><linearGradient id="sky1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bfe9ff"/><stop offset="100%" stop-color="#eaf7ff"/></linearGradient><radialGradient id="sun1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff3b0"/><stop offset="100%" stop-color="#ffd24d"/></radialGradient></defs>
+          <rect width="400" height="240" fill="url(#sky1)"/>
+          <circle cx="338" cy="48" r="26" fill="url(#sun1)"/>
+          <g stroke="#ffd24d" stroke-width="3" stroke-linecap="round" opacity="0.9"><line x1="338" y1="4" x2="338" y2="14"/><line x1="380" y1="48" x2="390" y2="48"/><line x1="366" y1="20" x2="374" y2="12"/><line x1="366" y1="76" x2="374" y2="84"/></g>
+          <rect x="50" y="34" width="240" height="172" rx="12" fill="#f4fbff" stroke="#9bbcd9" stroke-width="8"/>
+          <line x1="170" y1="34" x2="170" y2="206" stroke="#9bbcd9" stroke-width="8"/>
+          <line x1="50" y1="120" x2="290" y2="120" stroke="#9bbcd9" stroke-width="8"/>
+          <rect x="32" y="206" width="276" height="18" rx="5" fill="#b98c50"/>
+          <ellipse cx="170" cy="216" rx="150" ry="7" fill="rgba(0,0,0,0.08)"/>
+          <g transform="translate(96,150)">
+            <ellipse cx="60" cy="42" rx="60" ry="20" fill="#f6a14e"/>
+            <path d="M8 42 q-26 8 -46 -2" stroke="#f6a14e" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <circle cx="120" cy="22" r="17" fill="#f6a14e"/>
+            <path d="M109 5 l9 14 l-18 0 z" fill="#e88a30"/><path d="M131 5 l9 14 l-18 0 z" fill="#e88a30"/>
+            <circle cx="123" cy="20" r="2.6" fill="#3a2a1a"/>
+            <circle cx="104" cy="48" r="5" fill="#ffb3b3" opacity="0.7"/>
+            <path d="M120 30 q7 4 0 9" stroke="#c97a2a" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M44 26 q-12 -2 -18 6" stroke="#e88a30" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </g>
+          <g transform="translate(198,66)"><rect x="0" y="6" width="13" height="24" rx="3" fill="#7bbf5a"/><circle cx="6" cy="2" r="13" fill="#8ed26a"/><circle cx="-4" cy="8" r="9" fill="#8ed26a"/><circle cx="15" cy="8" r="9" fill="#8ed26a"/></g>`,
+        2:`<defs><linearGradient id="gr2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eaf6ff"/><stop offset="100%" stop-color="#dff1ff"/></linearGradient></defs>
+          <rect width="400" height="240" fill="url(#gr2)"/>
+          <rect x="0" y="184" width="400" height="56" fill="#a9dd86"/>
+          <path d="M0 184 q120 -14 240 0 t160 0 V240 H0 Z" fill="#bfe9a8" opacity="0.7"/>
+          <ellipse cx="200" cy="214" rx="120" ry="9" fill="rgba(0,0,0,0.06)"/>
+          <g transform="translate(248,60)">
+            <rect x="16" y="64" width="16" height="78" rx="4" fill="#8a5a2b"/>
+            <circle cx="24" cy="46" r="48" fill="#5fb84a"/>
+            <circle cx="-14" cy="62" r="34" fill="#6cc257"/>
+            <circle cx="58" cy="64" r="34" fill="#6cc257"/>
+            <path d="M-2 30 q24 -10 48 0" stroke="#4ea33c" stroke-width="3" fill="none" opacity="0.5"/>
+          </g>
+          <g transform="translate(54,150)">
+            <ellipse cx="42" cy="36" rx="50" ry="23" fill="#c98a4a"/>
+            <circle cx="90" cy="22" r="16" fill="#c98a4a"/>
+            <path d="M82 8 l7 12 l-14 0 z" fill="#a06a32"/><path d="M98 8 l7 12 l-14 0 z" fill="#a06a32"/>
+            <circle cx="93" cy="20" r="2.6" fill="#3a2a1a"/>
+            <circle cx="72" cy="50" r="5" fill="#ffb3b3" opacity="0.7"/>
+            <rect x="38" y="52" width="7" height="16" fill="#a06a32"/><rect x="56" y="52" width="7" height="16" fill="#a06a32"/>
+            <path d="M-6 42 q-28 6 -44 -2" stroke="#c98a4a" stroke-width="7" fill="none" stroke-linecap="round"/>
+          </g>
+          <g transform="translate(150,168)"><circle cx="0" cy="0" r="15" fill="#fff"/><circle cx="0" cy="0" r="15" fill="none" stroke="#cf3b3b" stroke-width="2.5"/><path d="M0 -15 A15 15 0 0 1 0 15" fill="#cf3b3b"/><path d="M-6 -6 h12 M-6 0 h12 M-6 6 h12" stroke="#1a1a1a" stroke-width="1.4"/><rect x="-3" y="-22" width="6" height="9" fill="#1a1a1a"/><rect x="-3" y="13" width="6" height="9" fill="#1a1a1a"/></g>
+          <g transform="translate(20,40)"><circle cx="20" cy="14" r="12" fill="#fff"/><circle cx="34" cy="10" r="10" fill="#fff"/><circle cx="30" cy="22" r="11" fill="#fff"/></g>`,
+        3:`<defs><linearGradient id="sky3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#9fb4c8"/><stop offset="100%" stop-color="#cdd8e3"/></linearGradient></defs>
+          <rect width="400" height="240" fill="url(#sky3)"/>
+          <rect x="0" y="198" width="400" height="42" fill="#9fb4c8"/>
+          <g stroke="#e8f0f7" stroke-width="2" stroke-linecap="round" opacity="0.8"><line x1="40" y1="18" x2="30" y2="58"/><line x1="90" y1="8" x2="80" y2="48"/><line x1="140" y1="22" x2="130" y2="62"/><line x1="200" y1="12" x2="190" y2="52"/><line x1="260" y1="20" x2="250" y2="60"/><line x1="320" y1="10" x2="310" y2="50"/><line x1="360" y1="24" x2="350" y2="64"/></g>
+          <g stroke="#7fa6cc" stroke-width="2" stroke-linecap="round" opacity="0.7"><line x1="60" y1="120" x2="60" y2="200"/><line x1="120" y1="130" x2="120" y2="205"/><line x1="300" y1="120" x2="300" y2="200"/></g>
+          <ellipse cx="200" cy="218" rx="70" ry="9" fill="#7f97ad" opacity="0.6"/>
+          <g transform="translate(168,40)">
+            <path d="M0 60 A60 60 0 0 1 120 60 Z" fill="#ff7eb3"/>
+            <path d="M0 60 A60 60 0 0 1 120 60" fill="none" stroke="#e85fa0" stroke-width="2"/>
+            <line x1="60" y1="60" x2="60" y2="150" stroke="#7a5b3a" stroke-width="4"/>
+            <circle cx="60" cy="58" r="4" fill="#ffd24d"/>
+          </g>
+          <g transform="translate(150,118)">
+            <circle cx="30" cy="10" r="15" fill="#ffd9b0"/>
+            <path d="M14 6 a16 16 0 0 1 32 0 z" fill="#5b3a29"/>
+            <rect x="16" y="24" width="26" height="42" rx="11" fill="#5aa0e0"/>
+            <rect x="18" y="64" width="10" height="24" rx="5" fill="#3a4a5a"/><rect x="32" y="64" width="10" height="24" rx="5" fill="#3a4a5a"/>
+            <path d="M16 26 q-8 14 -4 34" stroke="#5aa0e0" stroke-width="6" fill="none" stroke-linecap="round"/>
+          </g>`,
+        4:`<defs><linearGradient id="water4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7fd0ee"/><stop offset="100%" stop-color="#4ea8d8"/></linearGradient></defs>
+          <rect width="400" height="240" fill="#cdeeff"/>
+          <rect x="0" y="150" width="400" height="90" fill="url(#water4)"/>
+          <path d="M0 150 q100 -16 200 0 t200 0 V240 H0 Z" fill="#5bb8e0" opacity="0.5"/>
+          <g stroke="#ffffff" stroke-width="1.5" opacity="0.5" fill="none"><path d="M40 170 q20 -6 40 0"/><path d="M180 185 q24 -6 48 0"/><path d="M300 172 q20 -6 40 0"/></g>
+          <g transform="translate(296,36)">
+            <path d="M0 90 q-30 -30 0 -60 q30 30 0 60" fill="#ffc1d6"/>
+            <circle cx="0" cy="34" r="6" fill="#ff7eb3"/><circle cx="14" cy="44" r="6" fill="#ff7eb3"/><circle cx="-12" cy="44" r="6" fill="#ff7eb3"/>
+          </g>
+          <g transform="translate(70,150)">
+            <path d="M0 44 L92 44 L74 72 L18 72 Z" fill="#e8643c"/>
+            <rect x="42" y="10" width="6" height="36" fill="#7a5b3a"/>
+            <path d="M48 14 L82 30 L48 44 Z" fill="#fff" opacity="0.9"/>
+            <circle cx="46" cy="22" r="9" fill="#ffd9b0"/>
+            <path d="M30 60 q20 8 42 0" stroke="#c94a2a" stroke-width="2" fill="none"/>
+          </g>`,
+        5:`<defs><linearGradient id="wall5" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f7d79a"/><stop offset="100%" stop-color="#eec583"/></linearGradient><linearGradient id="fire5" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#ff9a2e"/><stop offset="100%" stop-color="#ffd24d"/></linearGradient></defs>
+          <rect width="400" height="240" fill="#eef1f4"/>
+          <rect x="0" y="190" width="400" height="50" fill="#b6bdc6"/>
+          <rect x="40" y="86" width="150" height="104" fill="url(#wall5)"/>
+          <path d="M28 86 L115 36 L202 86 Z" fill="#c0584e"/>
+          <rect x="70" y="118" width="42" height="42" fill="#bfe3ff" stroke="#7a5b3a" stroke-width="3"/>
+          <g transform="translate(120,120)"><rect x="0" y="0" width="46" height="30" rx="4" fill="#9aa3ad"/><rect x="10" y="6" width="26" height="18" rx="3" fill="#cfd6dd"/></g>
+          <g transform="translate(40,150)"><rect x="0" y="0" width="20" height="20" rx="3" fill="#8a6a4a"/></g>
+          <g transform="translate(96,150)">
+            <path d="M0 0 q-10 -22 14 -26 q10 -18 26 -6 q22 -4 18 18 q10 8 -2 18 q-8 14 -28 8 q-20 6 -28 -12 z" fill="url(#fire5)"/>
+            <path d="M6 -4 q-4 -14 10 -16 q8 -10 18 0 q12 0 8 12 q6 8 -4 14 q-8 8 -20 2 q-12 2 -18 -12 z" fill="#ff6b35" opacity="0.85"/>
+          </g>
+          <g fill="#9aa3ad" opacity="0.6"><circle cx="90" cy="110" r="12"/><circle cx="108" cy="92" r="16"/><circle cx="128" cy="74" r="20"/><circle cx="152" cy="60" r="24"/></g>
+          <g transform="translate(214,116)">
+            <rect x="0" y="24" width="150" height="52" rx="10" fill="#e23b3b"/>
+            <rect x="0" y="24" width="150" height="16" rx="8" fill="#ff5a5a"/>
+            <rect x="22" y="-8" width="64" height="38" rx="8" fill="#ffd24d"/>
+            <circle cx="30" cy="76" r="13" fill="#2b2b2b"/><circle cx="120" cy="76" r="13" fill="#2b2b2b"/>
+            <circle cx="30" cy="76" r="5" fill="#9aa3ad"/><circle cx="120" cy="76" r="5" fill="#9aa3ad"/>
+            <rect x="150" y="2" width="10" height="74" fill="#9aa3ad"/>
+            <rect x="-2" y="6" width="6" height="14" fill="#9aa3ad"/><rect x="156" y="6" width="6" height="14" fill="#9aa3ad"/>
+            <rect x="60" y="-30" width="6" height="40" fill="#c0392b"/><rect x="40" y="-18" width="40" height="6" fill="#c0392b" transform="rotate(20 60 -15)"/>
+          </g>`,
+        6:`<defs><linearGradient id="nightg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#16223f"/><stop offset="100%" stop-color="#33436a"/></linearGradient><radialGradient id="moon6" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fffbe6"/><stop offset="100%" stop-color="#f5e9a8"/></radialGradient></defs>
+          <rect width="400" height="240" fill="url(#nightg)"/>
+          <circle cx="60" cy="42" r="20" fill="url(#moon6)"/>
+          <circle cx="48" cy="36" r="5" fill="#e9dc9a" opacity="0.5"/><circle cx="68" cy="50" r="4" fill="#e9dc9a" opacity="0.5"/>
+          <g fill="#fff"><circle cx="120" cy="30" r="1.6"/><circle cx="180" cy="50" r="1.6"/><circle cx="250" cy="28" r="1.6"/><circle cx="320" cy="46" r="1.6"/><circle cx="360" cy="24" r="1.6"/><circle cx="300" cy="62" r="1.4"/></g>
+          <rect x="20" y="110" width="60" height="130" fill="#2c3a5a"/>
+          <rect x="95" y="78" width="72" height="162" fill="#33425f"/>
+          <rect x="180" y="120" width="55" height="120" fill="#2c3a5a"/>
+          <rect x="245" y="68" width="78" height="174" fill="#33425f"/>
+          <rect x="330" y="100" width="60" height="142" fill="#2c3a5a"/>
+          <g fill="#ffd24d">
+            <rect x="32" y="124" width="12" height="16" rx="2"/><rect x="56" y="124" width="12" height="16" rx="2"/><rect x="32" y="152" width="12" height="16" rx="2"/><rect x="56" y="152" width="12" height="16" rx="2"/>
+            <rect x="106" y="96" width="12" height="16" rx="2"/><rect x="130" y="96" width="12" height="16" rx="2"/><rect x="106" y="126" width="12" height="16" rx="2"/><rect x="130" y="126" width="12" height="16" rx="2"/><rect x="106" y="156" width="12" height="16" rx="2"/><rect x="130" y="156" width="12" height="16" rx="2"/>
+            <rect x="192" y="134" width="12" height="16" rx="2"/><rect x="216" y="134" width="12" height="16" rx="2"/><rect x="192" y="164" width="12" height="16" rx="2"/><rect x="216" y="164" width="12" height="16" rx="2"/>
+            <rect x="258" y="86" width="12" height="16" rx="2"/><rect x="284" y="86" width="12" height="16" rx="2"/><rect x="258" y="116" width="12" height="16" rx="2"/><rect x="284" y="116" width="12" height="16" rx="2"/><rect x="258" y="146" width="12" height="16" rx="2"/><rect x="284" y="146" width="12" height="16" rx="2"/>
+            <rect x="342" y="116" width="12" height="16" rx="2"/><rect x="366" y="116" width="12" height="16" rx="2"/><rect x="342" y="146" width="12" height="16" rx="2"/><rect x="366" y="146" width="12" height="16" rx="2"/>
+          </g>
+          <rect x="0" y="226" width="400" height="14" fill="#1c2740"/>
+          <g stroke="#fff6c8" stroke-width="3" stroke-linecap="round" opacity="0.85"><line x1="200" y1="226" x2="318" y2="226"/><line x1="190" y1="216" x2="120" y2="216"/></g>
+          <g fill="#fff6c8"><circle cx="150" cy="222" r="3"/><circle cx="260" cy="222" r="3"/></g>`
+      };
+      return `<div class="pic-scene"><svg class="pic-scene-bg" viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${scenes[g]||scenes[1]}</svg></div>`;
+    }
+    function pictureView(){
+      const p=PICTURE[userGrade]||PICTURE[1];
+      let h=`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级）</div><h3>🖼️ 看图写话</h3>`;
+      h+=pictureSceneSVG(userGrade);
+      h+=`<div class="pic-sample" style="border-left-color:var(--warn);"><b>图画里有什么：</b>${p.desc}</div>`;
+      h+=`<div class="pic-prompt"><b>看图写话：</b>${p.p} <button class="speak-btn" onclick="speakText('${esc(p.p)}','zh-CN')">🔊</button></div>`;
+      h+=`<div class="pic-sample"><b>参考示例：</b>${p.s} <button class="speak-btn" onclick="speakText('${esc(p.s)}','zh-CN')">🔊</button></div>`;
+      if(p.more&&p.more.length){
+        h+=`<div class="pic-sample" style="border-left-color:#34c759;"><b>更多描写示范：</b>`;
+        p.more.forEach(m=>{ h+=`<div style="margin-top:6px;">· ${m} <button class="speak-btn" onclick="speakText('${esc(m)}','zh-CN')">🔊</button></div>`; });
+        h+=`</div>`;
+      }
+      h+=`<div style="margin-top:12px;font-size:13px;color:var(--text-secondary);">先观察图画，再照着示例说一说、写一写；写完后可用设备自带的语音输入朗读自己的句子。</div></div>`;
+      const qs=PICTURE_Q[userGrade]||PICTURE_Q[1];
+      h+=`<div class="card-box"><div class="h-tag">✍️ 题型训练（选词填空）</div><h3>我会填</h3>`;
+      qs.forEach((it,i)=>{ h+=qBlock(i+1,it.q,it.a,it.c,it.e); });
+      h+=allAnswersBtn()+`</div>`;
+      const ext=PIC_EXT[userGrade]||PIC_EXT[1];
+      h+=`<div class="card-box"><div class="h-tag">✍️ 扩展训练（看图选词 · 连词成句）</div><h3>我会扩展</h3>`;
+      ext.forEach((it,i)=>{ h+=qBlock(i+1,it.q,it.a,it.c,it.e); });
+      h+=allAnswersBtn()+`</div>`;
+      return h;
+    }
+    // —— 数学 ——
+    function genOral(g){
+      const qs=[];
+      for(let i=0;i<5;i++){
+        let a,b,op,ans,text;
+        if(g<=1){a=rand(1,10);b=rand(1,10);op=Math.random()<.5?'+':'-';if(op==='-'&&b>a){const t=a;a=b;b=t;}ans=op==='+'?a+b:a-b;text=`${a} ${op} ${b} = ?`;}
+        else if(g===2){a=rand(10,99);b=rand(10,99);op=Math.random()<.5?'+':'-';if(op==='-'&&b>a){const t=a;a=b;b=t;}ans=op==='+'?a+b:a-b;text=`${a} ${op} ${b} = ?`;}
+        else if(g===3){const t=[2,3,4,5,6,7,8,9];a=t[rand(0,7)];b=rand(1,9);op=Math.random()<.5?'×':'÷';if(op==='÷'){ans=a;const p=a*b;a=p;b=b;}else ans=a*b;text=`${a} ${op} ${b} = ?`;}
+        else if(g===4){a=rand(100,999);b=rand(10,99);op=Math.random()<.5?'+':'-';if(op==='-'&&b>a){const t=a;a=b;b=t;}ans=op==='+'?a+b:a-b;text=`${a} ${op} ${b} = ?`;}
+        else if(g===5){a=rand(1,99)/10;b=rand(1,99)/10;ans=+(a+b).toFixed(1);text=`${a} + ${b} = ?`;}
+        else {a=rand(1,9);b=rand(1,9);ans=(a+b)+'/'+b;text=`${a}/${b} + ${b}/${b} = ?`;}
+        const wrongs=[ans+1,ans-1,ans+2].map(x=>String(x));
+        qs.push({q:text,a:shuffle([String(ans)].concat(wrongs)),c:String(ans)});
+      }
+      return qs;
+    }
+    function mathOralView(){
+      const qs=genOral(userGrade);
+      let h=conceptCard()+`<div class="card-box"><div class="h-tag">✍️ 题型训练（口算）</div><h3>🔢 口算天天练（${userGrade}年级）</h3>`;
+      qs.forEach((it,i)=>{ h+=qBlock(i+1,it.q,it.a,it.c,'口算直接算出结果。','math'); });
+      h+=allAnswersBtn()+`</div>`;
+      return h;
+    }
+    function mathSyncView(){
+      const arr=(MATH_SYNC[userGrade]||MATH_SYNC[1]).slice();
+      let h=conceptCard()+`<div class="card-box"><div class="h-tag">✍️ 题型训练（同步练习）</div><h3>📘 同步练习册（${userGrade}年级）</h3>`;
+      arr.forEach((it,i)=>{ h+=qBlock(i+1,it.q,it.a,it.c,it.e,'math'); });
+      h+=allAnswersBtn()+`</div>`;
+      return h;
+    }
+    function mathThinkView(){
+      const arr=(MATH_THINK[userGrade]||MATH_THINK[1]).slice();
+      let h=conceptCard()+`<div class="card-box"><div class="h-tag">✍️ 题型训练（思维）</div><h3>🧠 数学思维小题（${userGrade}年级）</h3>`;
+      arr.forEach((it,i)=>{ h+=qBlock(i+1,it.q,it.a,it.c,it.e,'math'); });
+      h+=allAnswersBtn()+`</div>`;
+      return h;
+    }
+    function mathWrongView(){
+      const mine=wrongBook.filter(w=>w.subject==='数学');
+      if(mine.length===0) return `<div class="card-box"><h3>🔁 错题订正</h3><div class="meaning">暂时没有数学错题，继续加油！答错的题会自动汇总到这里。</div></div>`;
+      let h=`<div class="card-box"><div class="h-tag">✍️ 题型训练（订正）</div><h3>🔁 错题订正（${Math.min(3,mine.length)}道）</h3>`;
+      mine.slice(0,3).forEach((it,i)=>{ h+=qBlock(i+1,it.question,it.options,it.correct,it.explain||'你已经掌握，注意思路。','math'); });
+      h+=allAnswersBtn()+`</div>`;
+      return h;
+    }
+    function mathLifeView(){
+      const prompts={
+        1:'今天你数了家里有几双鞋？用加法算一算一共有多少只。',
+        2:'去超市帮妈妈看价格，两件商品一共多少钱？用减法算找回多少。',
+        3:'观察钟表，写出你完成作业用了多长时间。',
+        4:'量一量你的书桌有多长，和爸爸的比一比谁的长。',
+        5:'记录今天的最高气温和最低气温，算一算相差多少度。',
+        6:'统计一家人最爱的水果，画一张条形图并写出你的发现。'
+      };
+      return `<div class="card-box"><div class="h-tag">🔍 生活中的数学（${userGrade}年级）</div><h3>🔍 今日生活数学</h3><div class="meaning"><b>今日观察：</b>${prompts[userGrade]} <button class="speak-btn" onclick="speakText('今日观察任务：${esc(prompts[userGrade])}','zh-CN')">🔊 朗读题目</button></div><div style="margin-top:12px;font-size:13px;color:var(--text-secondary);">这是开放题，没有唯一答案，重在观察与思考，自己动手做一做。 <button class="speak-btn" onclick="speakText('这是开放题，没有唯一答案，重在观察与思考，自己动手做一做。','zh-CN')">🔊</button></div></div>`;
+    }
+    // —— 英语 ——
+    function enWordView(){
+      const arr=(EN_WORDS[userGrade]||EN_WORDS[1]).slice();
+      let h=`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级）</div><h3>🔠 单词跟读（拼读）</h3>`;
+      arr.forEach(it=>{
+        h+=`<div class="en-word"><div><div class="en-text"><span style="color:var(--primary);font-weight:800;">${it.m}</span>　${it.w} <span class="en-phon">${it.ph}</span></div><div class="en-mean">例句：${it.s}（${it.sc}）　|　拼读 ${it.pho}</div><div class="repeat-fb" id="fb-${it.w}"></div></div><div class="en-btns"><button class="speak-btn" onclick="speakCnEn('${esc(it.m)}','${esc(it.w)}')">🔊 中+英</button><button class="speak-btn" onclick="speakEnCn('${esc(it.s)}','${esc(it.sc)}')">🔊 例句</button><button class="mic-btn" id="mic-${it.w}" onclick="startRepeat('${it.w}','${esc(it.w)}')">🎤</button></div></div>`;
+      });
+      h+=`</div>`;
+      const picks=shuffle(arr).slice(0,3);
+      h+=`<div class="card-box"><div class="h-tag">✍️ 题型训练（听音选词）</div><h3>🔠 听一听，选拼写</h3>`;
+      picks.forEach((it,i)=>{
+        const others=shuffle(arr.filter(x=>x.w!==it.w)).slice(0,2).map(x=>x.w).concat(it.w);
+        const sopts=shuffle(others);
+        h+=`<div class="q-item"><div class="q-text"><span class="q-num">${i+1}.</span><span class="q-body">听发音，选出正确的拼写：</span><button class="speak-btn" onclick="speakText('第${i+1}题，先点播放听英语单词发音，再选出正确的拼写。','zh-CN')">🔊 题干</button><button class="speak-btn" onclick="speakText('${esc(it.w)}','en-US')">🔊 播放</button></div><div class="q-options">`;
+        sopts.forEach((o,j)=>{ h+=`<button class="opt" data-val="${esc(o)}" onclick="checkAnswer(this,'${esc(o)}','${esc(it.w)}','英语·单词',this.parentElement.parentElement)"><span class="opt-lab">${OPT_LETTERS[j]||'·'}</span>${o}</button>`; });
+        h+=`</div>`+mqExplain(it.w, `单词 ${it.w} 的中文意思是「${it.m}」。`, sopts, 'en-US')+`</div>`;
+      });
+      h+=allAnswersBtn()+`</div>`;
+      return h;
+    }
+    function enTextView(){
+      const t=EN_TEXT[userGrade]||EN_TEXT[1];
+      let h=`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级）</div><h3>📖 课文听读</h3><div class="meaning">${t.t} <button class="speak-btn" onclick="speakEnCn('${esc(t.t)}','${esc(t.cn)}')">🔊 英文+译文</button><button class="speak-btn" onclick="speakText('${esc(t.t)}','en-US')">🔊 只听英文</button></div><div class="meaning" style="margin-top:8px;"><b>译文：</b>${t.cn} <button class="speak-btn" onclick="speakText('${esc(t.cn)}','zh-CN')">🔊</button></div></div>`;
+      h+=`<div class="card-box"><div class="h-tag">✍️ 题型训练（课文理解）</div><h3>📖 课文小测验</h3>`;
+      t.q.forEach((it,i)=>{ h+=qBlock(i+1,it.q,it.a,it.c,'听读并理解课文即可作答。','en-US',it.qcn); });
+      h+=allAnswersBtn()+`</div>`;
+      return h;
+    }
+    function enWriteView(){
+      if(userGrade<=2){
+        const letters=[['A','a','/eɪ/','apple','/ˈæp.əl/'],['B','b','/biː/','book','/bʊk/'],['C','c','/siː/','cat','/kæt/'],['D','d','/diː/','dog','/dɒɡ/'],['E','e','/iː/','egg','/eɡ/'],['F','f','/ef/','fish','/fɪʃ/'],['G','g','/dʒiː/','go','/ɡəʊ/'],['H','h','/eɪtʃ/','hat','/hæt/'],['I','i','/aɪ/','ice','/aɪs/'],['J','j','/dʒeɪ/','jam','/dʒæm/']];
+        let h=`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级）</div><h3>✏️ 字母书写（四线三格 · 大小写 · 音标）</h3><div style="display:flex;flex-wrap:wrap;justify-content:center;">`;
+        letters.forEach(l=>{
+          h+=`<div class="write-char">
+            <div style="display:flex;gap:8px;justify-content:center;align-items:flex-end;">
+              <div style="text-align:center;"><div class="en-rule"><span class="en-big">${l[0]}</span></div><div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">大写</div></div>
+              <div style="text-align:center;"><div class="en-rule"><span class="en-small">${l[1]}</span></div><div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">小写</div></div>
+            </div>
+            <div style="font-size:13px;margin-top:6px;color:var(--text);text-align:center;">读音 ${l[2]}　<b>${l[3]}</b> <span class="en-phon">${l[4]}</span><br><button class="speak-btn" style="margin-top:4px;" onclick="speakText('${esc(l[3])}','en-US')">🔊 听单词</button></div>
+          </div>`;
+        });
+        h+=`</div><div style="margin-top:12px;font-size:13px;color:var(--text-secondary);">字母写在四线三格里：大写字母顶第一线、占上面两格；小写字母按格子占格书写。点 🔊 听单词，跟着读字母和单词。 <button class="speak-btn" onclick="speakText('字母写在四线三格里。大写字母顶住第一线，占上面两格；小写字母按格子占格来写。点小喇叭听单词，跟着读字母和单词。','zh-CN')">🔊</button></div></div>`;
+        return h;
+      }
+      const phs=[['/iː/','see','/siː/'],['/æ/','cat','/kæt/'],['/e/','pen','/pen/'],['/ʌ/','sun','/sʌn/'],['/ɑː/','car','/kɑː/'],['/ɒ/','dog','/dɒɡ/'],['/uː/','moon','/muːn/'],['/ʊ/','book','/bʊk/'],['/eɪ/','cake','/keɪk/'],['/aɪ/','bike','/baɪk/']];
+      let h=`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级）</div><h3>🔡 音标书写（四线三格 · 音标 · 代表单词）</h3><div style="display:flex;flex-wrap:wrap;justify-content:center;">`;
+      phs.forEach(p=>{
+        h+=`<div class="write-char">
+          <div class="en-rule"><span class="en-big">${p[0]}</span></div>
+          <div style="font-size:13px;margin-top:6px;color:var(--text);text-align:center;"><b>${p[1]}</b> <span class="en-phon">${p[2]}</span><br><button class="speak-btn" style="margin-top:4px;" onclick="speakText('${esc(p[1])}','en-US')">🔊 听单词</button></div>
+        </div>`;
+      });
+      h+=`</div><div style="margin-top:12px;font-size:13px;color:var(--text-secondary);">每个音标下面写出它的代表单词，并把整个单词的音标（如 see /siː/）标出来；点 🔊 听单词发音来感受这个音标的读音。 <button class="speak-btn" onclick="speakText('每个音标下面写出它的代表单词，并把整个单词的音标标出来。点小喇叭听单词发音，来感受这个音标的读音，模仿口型。','zh-CN')">🔊</button></div></div>`;
+      return h;
+    }
+    function enPatternView(){
+      const arr=(EN_PATTERN[userGrade]||EN_PATTERN[1]).slice();
+      let h=`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级）</div><h3>🔤 句型拼读练习</h3>`;
+      arr.forEach(it=>{
+        h+=`<div class="en-word"><div><div class="en-text">${it.pat} <span class="en-phon">（${it.pc}）</span></div><div class="en-mean">例句：${it.ex}（${it.ec}）　|　拼读 ${it.pho}</div></div><div class="en-btns"><button class="speak-btn" onclick="speakEnCn('${esc(it.ex)}','${esc(it.ec)}')">🔊 英+中</button><button class="speak-btn" onclick="speakText('${esc(it.pc)}','zh-CN')">🔊 句型</button><button class="mic-btn" onclick="startRepeat('p${userGrade}_${arr.indexOf(it)}','${esc(it.ex)}')">🎤</button></div></div>`;
+      });
+      h+=`</div>`;
+      h+=`<div class="card-box"><div class="h-tag">✍️ 题型训练（选句型）</div><h3>🔤 我会选</h3>`;
+      arr.forEach((it,i)=>{ h+=qBlock(i+1,'“'+it.ex+'” 使用的句型是？',shuffle(arr.map(x=>x.pat)),it.pat,'例句对应句型：'+it.pat+'（'+it.pc+'）','en-US','这句英语是“'+it.ec+'”，请选出它使用的句型。'); });
+      h+=allAnswersBtn()+`</div>`;
+      return h;
+    }
+    function enPhonicsView(){
+      const arr=(EN_PHONICS[userGrade]||EN_PHONICS[1]).slice();
+      let h=conceptCard()+`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级 · 自然拼读）</div><h3>🔤 自然拼读教学</h3>`;
+      arr.forEach((les,i)=>{
+        h+=`<div style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;"><h3 style="margin-bottom:10px;">第 ${i+1} 课：字母（组）<b style="color:var(--primary)">${les.grp}</b> 的发音 ${les.tip?'<span class="en-phon">'+les.tip+'</span>':''} <button class="speak-btn" onclick="speakText('第${i+1}课，学习字母组合 ${esc(les.grp)} 的发音。先听下面每个单词的读音，再跟读例句。','zh-CN')">🔊 题干</button></h3>`;
+        h+=`<div style="display:flex;flex-wrap:wrap;gap:10px;">`;
+        les.words.forEach(w=>{ const ipa=WORD_IPA[w]||''; h+=`<span class="en-word" style="margin:0;flex:1;min-width:130px;"><span class="en-text">${w} <span class="en-phon">${ipa}</span></span><button class="speak-btn" onclick="speakText('${esc(w)}','en-US')">🔊</button></span>`; });
+        h+=`</div>`;
+        if(les.sentence){ h+=`<div style="margin-top:12px;font-size:16px;font-weight:600;">例句：<button class="speak-btn" onclick="speakText('${esc(les.sentence)}','en-US')">🔊</button> ${les.sentence}</div>`;
+          h+=`<div class="en-btns" style="margin-top:8px;"><button class="mic-btn" id="mic-ph${userGrade}_${i}" onclick="startRepeat('ph${userGrade}_${i}','${esc(les.sentence)}')">🎤 跟读</button></div>`; }
+        h+=`</div>`;
+      });
+      h+=`<div class="meaning" style="margin-top:4px;">自然拼读：先看字母（组）的发音，再拼读单词，最后用例句跟读。点击 🔊 听标准读音，🎤 可录音跟读对比。</div></div>`;
+      return h;
+    }
+    function enReadView(){
+      const r=EN_READ[userGrade]||EN_READ[1];
+      let h=`<div class="card-box"><div class="h-tag">📚 教材学习（${userGrade}年级）</div><h3>🔤 英语朗读 / 情景对话</h3>`;
+      h+=`<div class="meaning" style="font-size:16px;line-height:1.9;">${r.t} <button class="speak-btn" onclick="speakEnCn('${esc(r.t)}','${esc(r.cn)}')">🔊 英文+译文</button><button class="speak-btn" onclick="speakText('${esc(r.t)}','en-US')">🔊 只听英文</button></div>`;
+      h+=`<div class="meaning" style="margin-top:8px;"><b>译文：</b>${r.cn} <button class="speak-btn" onclick="speakText('${esc(r.cn)}','zh-CN')">🔊</button></div>`;
+      h+=`<div style="margin-top:12px;"><b>情景对话：</b><div class="meaning" style="font-size:16px;line-height:1.9;margin-top:6px;">${r.s} <button class="speak-btn" onclick="speakEnCn('${esc(r.s)}','${esc(r.sc)}')">🔊 英文+译文</button><button class="speak-btn" onclick="speakText('${esc(r.s)}','en-US')">🔊 只听英文</button></div><div class="meaning" style="margin-top:6px;"><b>对话译文：</b>${r.sc} <button class="speak-btn" onclick="speakText('${esc(r.sc)}','zh-CN')">🔊</button></div></div>`;
+      h+=`<div class="en-btns" style="margin-top:12px;"><button class="mic-btn" id="mic-read${userGrade}" onclick="startRepeat('read${userGrade}','${esc(r.s)}')">🎤 跟读对话</button></div>`;
+      h+=`<div style="margin-top:12px;font-size:13px;color:var(--text-secondary);">这是单纯的朗读练习（非儿歌）。跟着标准发音大声朗读，点 🎤 可录音跟读，练习口语与语感。</div></div>`;
+      return h;
+    }
+    function cnExtraView(){
+      const arr=(CN_EXTRA[userGrade]||CN_EXTRA[1]).slice();
+      const it=dailyPick(arr)||arr[0];
+      return `<div class="card-box"><div class="h-tag">📚 语文每日拓展（${userGrade}年级）</div><h3>📖 每日一题</h3>
+        <div class="q-item"><div class="q-text"><span class="q-body">${it.q}</span><button class="speak-btn" onclick="speakText('${esc(it.q)}','zh-CN')">🔊</button></div></div>
+        <div class="solution-box"><button class="solution-btn" onclick="this.nextElementSibling.classList.toggle('show');this.textContent=this.nextElementSibling.classList.contains('show')?'隐藏思路与答案':'显示思路与答案'">显示思路与答案</button>
+        <div class="solution-content"><div style="margin-bottom:8px;"><b>💡 解题思路：</b>${it.idea} <button class="speak-btn" onclick="speakText('${esc(it.idea)}','zh-CN')">🔊</button></div><div><b>✅ 答案：</b>${it.ans} <button class="speak-btn" onclick="speakText('${esc(it.ans)}','zh-CN')">🔊</button></div></div></div>
+        <div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">每天自动更新一题，先自己思考，再点按钮看思路和答案。</div></div>`;
+    }
+    function mathOlympiadView(){
+      const arr=(MATH_OLYMPIAD[userGrade]||MATH_OLYMPIAD[1]).slice();
+      const it=dailyPick(arr)||arr[0];
+      return `<div class="card-box"><div class="h-tag">📚 奥数思维（${userGrade}年级）</div><h3>🧠 每日一题 · 加难度</h3>
+        <div class="q-item"><div class="q-text"><span class="q-body">${it.q}</span><button class="speak-btn" onclick="speakMath('${esc(it.q)}')">🔊 读题</button></div></div>
+        <div class="solution-box"><button class="solution-btn" onclick="this.nextElementSibling.classList.toggle('show');this.textContent=this.nextElementSibling.classList.contains('show')?'隐藏思路与答案':'显示思路与答案'">显示思路与答案</button>
+        <div class="solution-content"><div style="margin-bottom:8px;"><b>💡 解题思路：</b>${it.idea} <button class="speak-btn" onclick="speakText('${esc(it.idea)}','zh-CN')">🔊</button></div><div><b>✅ 答案：</b>${it.ans} <button class="speak-btn" onclick="speakMath('${esc(it.ans)}')">🔊</button></div></div></div>
+        <div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">奥数题每日轮换，先动脑筋，再点按钮看解题思路和答案。</div></div>`;
+    }
+    function enExtraView(){
+      const arr=(EN_EXTRA[userGrade]||EN_EXTRA[1]).slice();
+      const it=dailyPick(arr)||arr[0];
+      return `<div class="card-box"><div class="h-tag">📚 英语每日拓展（${userGrade}年级）</div><h3>🔤 每日一题 · 听力/阅读小拓展</h3>
+        <div class="q-item"><div class="q-text"><span class="q-body">${it.q}</span><button class="speak-btn" onclick="speakText('${esc(it.q)}','en-US')">🔊 读英语</button><button class="speak-btn" onclick="speakText('${esc(it.idea)}','zh-CN')">🔊 提示（中文）</button></div></div>
+        <div class="solution-box"><button class="solution-btn" onclick="this.nextElementSibling.classList.toggle('show');this.textContent=this.nextElementSibling.classList.contains('show')?'隐藏思路与答案':'显示思路与答案'">显示思路与答案</button>
+        <div class="solution-content"><div style="margin-bottom:8px;"><b>💡 解题思路：</b>${it.idea} <button class="speak-btn" onclick="speakText('${esc(it.idea)}','zh-CN')">🔊</button></div><div><b>✅ 答案：</b>${it.ans} <button class="speak-btn" onclick="speakText('${esc(it.ans)}','en-US')">🔊 读答案</button></div></div></div>
+        <div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">每天一题英语小拓展，练习听力与阅读；先自己作答，再点按钮核对。</div></div>`;
+    }
+    function renderBrain(){
+      const ph=document.getElementById('page-brain');
+      ph.style.alignItems='stretch'; ph.style.textAlign='left'; ph.style.overflowY='auto'; ph.style.padding='24px 28px 100px';
+      const len=BRAIN_TEASERS.length;
+      const i1=dayOfYear()%len;
+      const i2=(i1+Math.floor(len/2))%len;
+      const items=[BRAIN_TEASERS[i1],BRAIN_TEASERS[i2]];
+      let h=`<div style="max-width:680px;width:100%;margin:0 auto;">`;
+      h+=`<div class="section-title"><h2>🧠 脑筋急转弯（每日更新）</h2></div>`;
+      h+=`<div class="card-box"><div class="h-tag">玩法</div><div class="meaning">每天自动更新 2 个趣味脑筋急转弯。先自己想一想，再点「答案」揭晓谜底。 </div></div>`;
+      items.forEach((it,idx)=>{
+        h+=`<div class="card-box"><div class="h-tag">第 ${idx+1} 题</div><div class="q-item"><div class="q-text"><span class="q-body">${it.q}</span><button class="speak-btn" onclick="speakText('${esc(it.q)}','zh-CN')">🔊 读题</button></div></div>
+          <div class="solution-box"><button class="solution-btn" onclick="this.nextElementSibling.classList.toggle('show');this.textContent=this.nextElementSibling.classList.contains('show')?'隐藏':'答案'">答案</button>
+          <div class="solution-content"><b>✅ 答案：</b>${it.a} <button class="speak-btn" onclick="speakText('${esc(it.a)}','zh-CN')">🔊 听答案</button></div></div></div>`;
+      });
+      h+=`</div>`;
+      ph.innerHTML=h;
+    }
+
+    // ===================== 科学小实验（每日更新，难度按年级递增） =====================
+    function renderScience(){
+      const ph=document.getElementById('page-science');
+      ph.style.alignItems='stretch'; ph.style.textAlign='left'; ph.style.overflowY='auto'; ph.style.padding='24px 28px 100px';
+      const list=(SCIENCE_EXP[userGrade]||SCIENCE_EXP[1]).slice();
+      const exp=dailyPick(list)||list[0];
+      // 同年级其它实验（可展开浏览）
+      const others=list.filter(x=>x.t!==exp.t);
+      let h=`<div style="max-width:680px;width:100%;margin:0 auto;">`;
+      h+=`<div class="section-title"><h2>🔬 科学小实验（每日更新 · ${userGrade}年级）</h2></div>`;
+      h+=`<div class="card-box"><div class="h-tag">今日实验</div>
+        <h3 style="font-size:18px;line-height:1.5;">${exp.t}</h3>
+        <div class="meaning"><b>🧰 准备材料：</b>${exp.mat} <button class="speak-btn" onclick="speakText('准备材料：${esc(exp.mat)}','zh-CN')">🔊 听材料</button></div>
+        <div class="meaning" style="margin-top:8px;"><b>📋 步骤：</b>${exp.steps} <button class="speak-btn" onclick="speakText('步骤：${esc(exp.steps)}','zh-CN')">🔊 听步骤</button></div>
+        <div class="solution-box" style="margin-top:12px;"><button class="solution-btn" onclick="this.nextElementSibling.classList.toggle('show');this.textContent=this.nextElementSibling.classList.contains('show')?'隐藏原理解析':'看原理解析'">看原理解析</button>
+          <div class="solution-content"><b>💡 原理：</b>${exp.why} <button class="speak-btn" onclick="speakText('${esc(exp.why)}','zh-CN')">🔊 听原理</button></div>
+        </div>
+        <div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">每天自动更新一个实验，年级越高越有挑战；做实验一定要有家长陪同，注意安全。 <button class="speak-btn" onclick="speakText('今天做一个科学小实验。年级越高，实验越有挑战。做实验一定要有家长陪同，注意安全。','zh-CN')">🔊</button></div>
+      </div>`;
+      if(others.length){
+        h+=`<div class="card-box"><div class="h-tag">🍀 拓展小实验（本年级其它实验）</div>`;
+        others.forEach(o=>{
+          h+=`<div style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;">
+            <h3 style="font-size:16px;margin-bottom:8px;line-height:1.4;">${o.t}</h3>
+            <div class="meaning"><b>🧰 准备材料：</b>${o.mat} <button class="speak-btn" onclick="speakText('准备材料：${esc(o.mat)}','zh-CN')">🔊 听材料</button></div>
+            <div class="meaning" style="margin-top:8px;"><b>📋 步骤：</b>${o.steps} <button class="speak-btn" onclick="speakText('步骤：${esc(o.steps)}','zh-CN')">🔊 听步骤</button></div>
+            <div class="solution-box" style="margin-top:10px;"><button class="solution-btn" onclick="this.nextElementSibling.classList.toggle('show');this.textContent=this.nextElementSibling.classList.contains('show')?'隐藏原理解析':'看原理解析'">看原理解析</button>
+              <div class="solution-content"><b>💡 原理：</b>${o.why} <button class="speak-btn" onclick="speakText('${esc(o.why)}','zh-CN')">🔊 听原理</button></div>
+            </div>
+          </div>`;
+        });
+        h+=`</div>`;
+      }
+      h+=`</div>`;
+      ph.innerHTML=h;
+    }
+
+    // ===================== 答题与错题 =====================
+    function checkAnswer(btn,sel,correct,cat,container,explain){
+      const opts=container.querySelectorAll('.opt');
+      opts.forEach(o=>{ o.disabled=true; o.style.cursor='default'; });
+      const ex=container.querySelector('.q-explain'); if(ex) ex.classList.add('show');
+      const sKey=cat?cat.split('·')[0]:'';
+      const sCN=SUBJ_CN[sKey]||sKey;
+      if(cat) recordStat(sCN, sel===correct);
+      if(sel===correct){ btn.classList.add('correct'); if(currentTaskDetail) maybeReward(); }
+      else {
+        btn.classList.add('wrong');
+        opts.forEach(o=>{ if(o.dataset.val===correct) o.classList.add('correct'); });
+        if(currentTaskDetail){
+          const qtext=container.querySelector('.q-body').textContent;
+          recordWrong({subject:sCN,category:sCN,question:qtext,yourAnswer:sel,correct:correct,options:Array.from(opts).map(o=>o.dataset.val),explain:explain||'',date:getToday(),grade:userGrade});
+          setTodayAllCorrect(false);
+        }
+      }
+    }
+    function recordWrong(w){
+      if(wrongBook.find(x=>x.question===w.question && x.correct===w.correct)){ saveWrong(); return; }
+      w.id=Date.now()+Math.floor(Math.random()*1000);
+      wrongBook.push(w); saveWrong();
+    }
+    // 答题正确率统计（按 日期|科目 记录）
+    function recordStat(subject,correct){
+      if(!subject) return;
+      const k=getToday()+'|'+subject;
+      const o=answerStats[k]||{correct:0,total:0};
+      o.total++; if(correct) o.correct++; answerStats[k]=o; saveStats();
+    }
+    function flowersOf(acc){ return acc>=100?3 : acc>=80?2 : acc>=60?1 : 0; }
+    function computeFlowers(){
+      let total=0; const byDate={};
+      for(const k in answerStats){
+        const p=k.split('|'); const date=p[0], sub=p[1]; const o=answerStats[k];
+        if(!o||!o.total) continue;
+        const acc=Math.round(o.correct/o.total*100);
+        const f=flowersOf(acc);
+        if(!byDate[date]) byDate[date]={语文:0,数学:0,英语:0,total:0};
+        byDate[date][sub]=f; byDate[date].total+=f; total+=f;
+      }
+      return {total, byDate};
+    }
+    function todaySubjectAcc(sub){
+      const o=answerStats[getToday()+'|'+sub];
+      if(!o||!o.total) return {correct:0,total:0,acc:0,flowers:0};
+      const acc=Math.round(o.correct/o.total*100);
+      return {correct:o.correct,total:o.total,acc,flowers:flowersOf(acc)};
+    }
+    function setTodayAllCorrect(v){ const t=getToday(); dailyFlags[t]=dailyFlags[t]||{}; dailyFlags[t].allCorrect=v; saveFlags(); }
+    function maybeReward(){
+      const t=getToday();
+      const allDone=Object.keys(tasksData).every(sub=>tasksData[sub].tasks.length>0 && tasksData[sub].tasks.every(x=>x.completed));
+      if(allDone && dailyFlags[t] && dailyFlags[t].allCorrect!==false){
+        if(!rewards.find(r=>r.date===t && r.type==='allCorrect')){
+          rewards.push({date:t,type:'allCorrect',label:'全对小明星',emoji:'⭐'});
+          saveRewards(); showToast('⭐ 全部完成且全对，获得奖励！');
+        }
+      }
+    }
+    function checkAllDone(){
+      const t=getToday();
+      const done=Object.keys(tasksData).every(sub=>tasksData[sub].tasks.length>0 && tasksData[sub].tasks.every(x=>x.completed));
+      if(done){ checkinLog[t]=true; saveCheckin(); }
+    }
+
+    // ===================== 错题本 =====================
+    function renderWrongBook(){
+      const ph=document.getElementById('page-errors');
+      if(wrongBook.length===0){ ph.innerHTML=`<div class="big-emoji">✅</div><h2>错题本</h2><p>还没有错题，继续保持！</p>`; return; }
+      let h=`<div style="width:100%;max-width:680px;text-align:left;">`;
+      h+=`<div class="section-title"><h2>📝 错题本（${wrongBook.length} 道）</h2></div>`;
+      wrongBook.slice().reverse().forEach(w=>{
+        h+=`<div class="wb-item"><span class="wb-del" onclick="removeWrong(${w.id})">移除 ✓</span><div class="wb-q">【${w.category||w.subject}】${w.question}</div><div class="wb-a">你的答案：${w.yourAnswer}</div><div class="wb-c">正确答案：${w.correct}</div>${w.explain?`<div class="wb-meta">解析：${w.explain}</div>`:''}<div class="wb-meta">${w.date} · ${w.grade}年级</div></div>`;
+      });
+      h+=`</div>`;
+      ph.innerHTML=h;
+    }
+    function removeWrong(id){ if(!confirmDelete()) return; wrongBook=wrongBook.filter(w=>w.id!==id); saveWrong(); renderWrongBook(); showToast('已从错题本移除'); }
+
+    // ===================== 学习小游戏 =====================
+    let gameState=null;
+    function gameQCount(){ return userGrade<=2?5 : userGrade<=4?6 : 8; }
+    function buildQuestionBank(){
+      const bank=[];
+      // 数学：来自当日同年级教材同步与思维题（难度随年级教材递增）
+      (MATH_SYNC[userGrade]||MATH_SYNC[1]).concat(MATH_THINK[userGrade]||MATH_THINK[1]).forEach(it=>bank.push({q:it.q,a:it.a,c:it.c,e:it.e,sub:'数学'}));
+      // 英语：课文理解 + 单词中译英（同年级教材词表）
+      (EN_TEXT[userGrade]||EN_TEXT[1]).q.forEach(it=>bank.push({q:it.q,a:it.a,c:it.c,e:it.qcn||'',cn:it.qcn||'',sub:'英语'}));
+      const ew=(EN_WORDS[userGrade]||EN_WORDS[1]);
+      ew.slice(0,4).forEach(it=>{
+        const others=shuffle(ew.filter(x=>x.w!==it.w)).slice(0,2).map(x=>x.w);
+        bank.push({q:`中文意思是「${it.m}」的英语单词是？`,a:others.concat(it.w),c:it.w,e:`${it.w} ${it.ph} 就是「${it.m}」。`,sub:'英语'});
+      });
+      // 语文：古诗作者 + 成语释义（同年级教材内容）
+      (POEMS[userGrade]||POEMS[1]).forEach(p=>{
+        const distract=['杜甫','白居易','王安石','孟浩然'].filter(x=>x!==p.a).slice(0,2);
+        bank.push({q:`《${p.t}》的作者是谁？`,a:distract.concat(p.a),c:p.a,e:`《${p.t}》是${p.d}代诗人${p.a}写的。`,sub:'语文'});
+      });
+      const ids=(IDIOMS[userGrade]||IDIOMS[1]);
+      ids.slice(0,3).forEach(it=>{
+        const others=shuffle(ids.filter(x=>x.n!==it.n)).slice(0,2).map(x=>x.n);
+        bank.push({q:`「${it.m.split('。')[0]}。」说的是哪个成语？`,a:others.concat(it.n),c:it.n,e:`${it.n}：${it.m}`,sub:'语文'});
+      });
+      return shuffle(bank).slice(0, gameQCount());
+    }
+    function renderPlants(){
+      const ph=document.getElementById('page-plants');
+      ph.style.alignItems='stretch'; ph.style.textAlign='left'; ph.style.overflowY='auto'; ph.style.padding='24px 28px 100px';
+      const n=gameQCount();
+      let h=`<div style="max-width:680px;width:100%;margin:0 auto;" id="game-wrap">`;
+      h+=`<div class="section-title"><h2>🎮 学习小游戏（${userGrade}年级 · 语数外闯关）</h2></div>`;
+      h+=`<div class="card-box"><div class="h-tag">玩法</div><div class="meaning">题目全部来自 ${userGrade} 年级每日教材（语文·数学·英语），年级越高关卡越多、题目越难。答对一题，小兔子向 🍄 前进一步；答错失去一颗 ❤️，错题自动进错题本。闯过全部 ${n} 关即获胜，获得「闯关小达人」勋章。 <button class="speak-btn" onclick="speakText('游戏玩法：题目来自你这个年级的语文、数学、英语教材。答对一题，小兔子就向蘑菇前进一步；答错会失去一颗心。闯过全部${n}关就胜利啦！','zh-CN')">🔊 听玩法</button></div></div>`;
+      h+=`<div class="card-box"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;"><div>❤️ 生命 <span class="life" id="game-life">❤️❤️❤️</span>　<span id="game-progress" style="font-size:13px;color:var(--text-secondary);"></span></div><button class="sync-btn" onclick="startGame()" id="game-start-btn">开始游戏</button></div>`;
+      h+=`<div class="game-lawn" id="game-lawn"><div style="position:absolute;left:20px;bottom:20px;font-size:40px;" id="rabbit">🐰</div><div style="position:absolute;right:20px;bottom:20px;font-size:36px;" id="mushroom">🍄</div></div>`;
+      h+=`<div class="game-msg" id="game-msg">点击「开始游戏」出发吧！</div></div>`;
+      h+=`<div id="game-question-area"></div>`;
+      h+=`</div>`;
+      ph.innerHTML=h;
+    }
+    function startGame(){
+      const bank=buildQuestionBank();
+      gameState={life:3,idx:0,bank};
+      document.getElementById('game-life').textContent='❤️'.repeat(gameState.life);
+      document.getElementById('game-msg').textContent='第 1 题，加油！';
+      const sb=document.getElementById('game-start-btn'); if(sb) sb.textContent='重新开始';
+      nextGameQuestion();
+    }
+    function moveFox(){
+      const fox=document.getElementById('rabbit'); const lawn=document.getElementById('game-lawn');
+      if(!fox||!lawn||!gameState) return;
+      const total=gameState.bank.length;
+      const usable=Math.max(0,lawn.clientWidth-110);
+      fox.style.transition='left .4s'; fox.style.left=(20+usable*Math.min(1,gameState.idx/total))+'px';
+    }
+    function nextGameQuestion(){
+      if(!gameState) return;
+      const area=document.getElementById('game-question-area'); if(!area) return;
+      if(gameState.life<=0){ endGame(false); return; }
+      if(gameState.idx>=gameState.bank.length){ endGame(true); return; }
+      const it=gameState.bank[gameState.idx];
+      document.getElementById('game-msg').textContent=`第 ${gameState.idx+1} / ${gameState.bank.length} 题（${it.sub}），加油！`;
+      const gp=document.getElementById('game-progress'); if(gp) gp.textContent=`进度 ${gameState.idx}/${gameState.bank.length}`;
+      moveFox();
+      // 先插入 DOM，再挂选项按钮（修复此前选项无法渲染、游戏不能操作的问题）
+      const box=document.createElement('div');
+      box.className='card-box'; box.id='game-question-box';
+      box.innerHTML=`<div class="h-tag">🎮 第 ${gameState.idx+1} 题 · ${it.sub}</div><div class="q-item"><div class="q-text"><span class="q-body">${it.q}</span> <button class="speak-btn" onclick="speakSub('${esc(it.q)}','${it.sub}')">🔊 读题</button>${it.cn?` <button class="speak-btn" onclick="speakText('${esc(it.cn)}','zh-CN')">🔊 中文</button>`:''}</div>${it.cn?`<div class="en-mean" style="margin:4px 0 8px;">（${it.cn}）</div>`:''}<div class="q-options"></div></div>`;
+      area.innerHTML=''; area.appendChild(box);
+      const optWrap=box.querySelector('.q-options');
+      shuffle(it.a.slice()).forEach((o,idx)=>{
+        const b=document.createElement('button'); b.className='opt'; b.dataset.val=o;
+        b.innerHTML=`<span class="opt-lab">${OPT_LETTERS[idx]||'·'}</span>${o}`;
+        b.onclick=()=>{
+          if(b.disabled) return;
+          const opts=optWrap.querySelectorAll('.opt');
+          opts.forEach(x=>x.disabled=true);
+          const right=(o===it.c);
+          recordStat(it.sub, right);
+          if(right){ b.classList.add('correct'); showToast('⭐ 答对！'); }
+          else { b.classList.add('wrong'); opts.forEach(x=>{ if(x.dataset.val===it.c) x.classList.add('correct'); });
+            gameState.life--; document.getElementById('game-life').textContent='❤️'.repeat(Math.max(0,gameState.life))||'💔';
+            recordWrong({subject:it.sub,category:'学习小游戏·'+it.sub,question:it.q,yourAnswer:o,correct:it.c,options:it.a,explain:it.e||'',date:getToday(),grade:userGrade});
+            showToast('💔 答错，失去一颗❤️');
+            if(it.e) speakText('正确答案是，'+it.c+'。'+it.e,'zh-CN'); }
+          setTimeout(()=>{ if(!gameState) return; gameState.idx++; nextGameQuestion(); }, right?900:2200);
+        };
+        optWrap.appendChild(b);
+      });
+      // 低年级自动读题，孩子不识字也能玩
+      if(userGrade<=3){ setTimeout(()=>speakSub(it.q,it.sub),300); }
+    }
+    function endGame(win){
+      const area=document.getElementById('game-question-area'); if(area) area.innerHTML='';
+      const gp=document.getElementById('game-progress'); if(gp&&gameState) gp.textContent=win?`进度 ${gameState.bank.length}/${gameState.bank.length}`:'';
+      if(win){ const fox=document.getElementById('rabbit'); const lawn=document.getElementById('game-lawn'); if(fox&&lawn){ fox.style.left=(lawn.clientWidth-90)+'px'; } }
+      document.getElementById('game-msg').textContent= win?'🎉 通关！你是闯关小达人！':'💔 生命耗尽了，点「重新开始」再试一次吧！';
+      speakText(win?'恭喜你，全部闯关成功，你是闯关小达人！':'生命用完了，别灰心，再试一次吧！','zh-CN');
+      if(win){
+        const t=getToday();
+        if(!rewards.find(r=>r.date===t && r.type==='game')){ rewards.push({date:t,type:'game',label:'闯关小达人',emoji:'🌟'}); saveRewards(); }
+        showToast('🌟 通关奖励：闯关小达人！');
+      }
+      gameState=null;
+    }
+
+    // ===================== 奖励中心（按正确率评小红花） =====================
+    function renderRewards(){
+      const ph=document.getElementById('page-rewards');
+      ph.style.alignItems='stretch'; ph.style.textAlign='left'; ph.style.overflowY='auto'; ph.style.padding='24px 28px 100px';
+      const {total,byDate}=computeFlowers();
+      const yuanAll=Math.floor(total/9);
+      const remainAll=total%9;
+      const subs=['语文','数学','英语'];
+      const t=getToday();
+      const flower=p=>'🌸'.repeat(p);
+      // 本月每日人民币（每日三科合计，满 9 朵记 ¥1，月底汇总）
+      const now=new Date(); const y=now.getFullYear(), m=now.getMonth();
+      let monthRMB=0; const monthRows=[];
+      for(const date in byDate){
+        const pp=date.split('-'); const dy=parseInt(pp[0],10), dm=parseInt(pp[1],10)-1;
+        if(dy===y && dm===m){
+          const dfl=byDate[date].total; const dyuan=Math.floor(dfl/9); monthRMB+=dyuan;
+          monthRows.push({date:date,dfl:dfl,dyuan:dyuan});
+        }
+      }
+      monthRows.sort((a,b)=>a.date<b.date?-1:1);
+      const todayTotal=(byDate[t]&&byDate[t].total)||0;
+      const todayYuan=Math.floor(todayTotal/9);
+      let h=`<div style="max-width:680px;width:100%;margin:0 auto;">`;
+      // 总览：累计小红花 + 折算人民币
+      h+=`<div class="card-box" style="background:linear-gradient(135deg,#fff0f3,#ffe3ec);border:none;">
+        <div class="h-tag">🌸 小红花银行（累计）</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div><div style="font-size:34px;font-weight:800;color:#e23b6d;">🌸 ${total} 朵</div><div style="font-size:13px;color:#9b5a72;">累计获得的小红花</div></div>
+          <div style="text-align:right;"><div style="font-size:28px;font-weight:800;color:#b8860b;">¥ ${yuanAll.toFixed(2)}</div><div style="font-size:13px;color:#9b5a72;">累计满 9 朵记 ¥1</div></div>
+        </div>
+        <div style="margin-top:10px;font-size:13px;color:#9b5a72;">${remainAll===0?'累计已凑满整数，可兑换 ¥'+yuanAll+'。':'累计再得 '+(9-remainAll)+' 朵即可再换 ¥1。'}</div>
+      </div>`;
+      // 本月人民币奖励
+      h+=`<div class="card-box" style="background:linear-gradient(135deg,#eef5ff,#e7f0ff);border:none;">
+        <div class="h-tag">📆 本月人民币奖励</div>
+        <div style="font-size:28px;font-weight:800;color:#2b6cff;">¥ ${monthRMB.toFixed(2)} <span style="font-size:13px;color:#6b7a99;font-weight:600;">本月已累计可得</span></div>
+        <div style="margin-top:6px;font-size:13px;color:#6b7a99;">规则：每天把语文·数学·英语三科得到的小红花加在一起，满 9 朵就记 ¥1，月底汇总本月所得。</div>`;
+      if(monthRows.length){
+        h+=`<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">`;
+        monthRows.forEach(r=>{ h+=`<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#41506b;background:#fff;border-radius:10px;padding:8px 12px;"><span>${r.date}</span><span>🌸 ${r.dfl} 朵 → <b style="color:#2b6cff;">¥${r.dyuan.toFixed(2)}</b></span></div>`; });
+        h+=`</div>`;
+      } else {
+        h+=`<div style="margin-top:8px;font-size:13px;color:#6b7a99;">本月还没有答题记录，去做「每日一练」的语数外题目吧！</div>`;
+      }
+      h+=`</div>`;
+      // 今日三科合计
+      h+=`<div class="card-box" style="margin-bottom:12px;background:linear-gradient(135deg,#f3fff6,#e9fbf0);border:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-weight:700;">今日三科合计</div>
+          <div>🌸 ${todayTotal} 朵${todayTotal>0?(' <b style="color:#1f9d57;">→ ¥'+todayYuan.toFixed(2)+'</b>'):''}</div>
+        </div>
+        <div style="margin-top:6px;font-size:13px;color:#5a7a66;">今日三科小红花加在一起，满 9 朵即可记 ¥1（计入本月汇总）。</div>
+      </div>`;
+      // 今日三科正确率与小红花
+      h+=`<div class="section-title"><h2>📅 今日答题（${t}）</h2></div>`;
+      let anyData=false;
+      subs.forEach(s=>{
+        const a=todaySubjectAcc(s);
+        if(a.total>0) anyData=true;
+        h+=`<div class="card-box" style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-weight:700;">${s}</div>
+            <div>${a.total>0?flower(a.flowers):'—'}</div>
+          </div>
+          <div style="margin-top:6px;font-size:13px;color:var(--text-secondary);">正确率 ${a.acc}%　(${a.correct}/${a.total})　${a.total>0?('得 '+a.flowers+' 朵'):'今日未答题'}</div>
+          <div style="height:8px;background:#eee;border-radius:6px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${a.acc}%;background:linear-gradient(90deg,#ff8fab,#e23b6d);border-radius:6px;"></div></div>
+        </div>`;
+      });
+      if(!anyData){ h+=`<div class="empty-state"><div class="emoji">🌸</div><div>今天还没有答题记录。去「每日一练」做语数外题目，或玩「学习小游戏」，正确率越高小红花越多！<br>评分：100分→3朵，80-99分→2朵，60-80分→1朵，低于60分→0朵。</div></div>`; }
+      // 小红花园
+      h+=`<div class="section-title"><h2>🌸 我的小红花园</h2></div>`;
+      h+=`<div class="card-box"><div style="font-size:24px;line-height:1.7;word-break:break-all;">${total>0?flower(Math.min(total,90))+(total>90?(' …共'+total+'朵'):''):'还没有小红花，加油答题吧！'}</div></div>`;
+      // 荣誉勋章（保留原有奖励记录）
+      if(rewards.length>0){
+        h+=`<div class="section-title"><h2>🏅 荣誉勋章</h2></div><div class="reward-grid">`;
+        rewards.slice().reverse().forEach(r=>{ h+=`<div class="reward-card"><div class="emoji">${r.emoji}</div><div class="t">${r.label}</div><div class="d">${r.date}</div></div>`; });
+        h+=`</div>`;
+      }
+      h+=`</div>`;
+      ph.innerHTML=h;
+    }
+
+    // ===================== 打卡统计 =====================
+    function renderStats(){
+      const ph=document.getElementById('page-stats');
+      ph.style.alignItems='stretch'; ph.style.textAlign='left'; ph.style.overflowY='auto'; ph.style.padding='24px 28px 100px';
+      const now=new Date(); const y=now.getFullYear(), m=now.getMonth();
+      const days=new Date(y,m+1,0).getDate();
+      let doneMonth=0, streak=0;
+      const order=[];
+      for(let d=1;d<=days;d++){ const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; order.push({d,key,done:!!checkinLog[key]}); if(checkinLog[key]) doneMonth++; }
+      let s=0; for(let i=order.length-1;i>=0;i--){ if(order[i].done) s++; else break; }
+      streak=s;
+      let total=0; Object.values(checkinLog).forEach(v=>{ if(v) total++; });
+      let h=`<div style="max-width:680px;width:100%;margin:0 auto;">`;
+      h+=`<div class="stat-cards">
+        <div class="stat-num"><div class="n">${doneMonth}</div><div class="l">本月打卡（天）</div></div>
+        <div class="stat-num"><div class="n">${streak}</div><div class="l">连续打卡（天）</div></div>
+        <div class="stat-num"><div class="n">${total}</div><div class="l">累计打卡（天）</div></div>
+      </div>`;
+      h+=`<div class="card-box"><div class="h-tag">📅 ${y}年 ${m+1}月 月报</div><div class="stat-grid">`;
+      const wk=['日','一','二','三','四','五','六'];
+      let first=new Date(y,m,1).getDay();
+      h+=wk.map(w=>`<div class="stat-wk">${w}</div>`).join('');
+      for(let i=0;i<first;i++) h+=`<div class="stat-day" style="visibility:hidden;"></div>`;
+      order.forEach(o=>{ h+=`<div class="stat-day ${o.done?'done':''} ${o.key===getToday()?'today':''}">${o.d}</div>`; });
+      h+=`</div><div style="margin-top:10px;font-size:13px;color:var(--text-secondary);">紫色日期为已完成全部任务的打卡日。</div></div></div>`;
+      ph.innerHTML=h;
+    }
+
+    // ===================== 每日英语（听力 + 跟读 + 口语） =====================
+    function renderDailyEnglish(){
+      const ph=document.getElementById('page-english');
+      ph.style.alignItems='stretch'; ph.style.textAlign='left'; ph.style.overflowY='auto'; ph.style.padding='24px 28px 100px';
+      const t=EN_TEXT[userGrade]||EN_TEXT[1];
+      const arr=(EN_WORDS[userGrade]||EN_WORDS[1]).slice();
+      const listen=shuffle(arr).slice(0,3);
+      let h=`<div style="max-width:680px;width:100%;margin:0 auto;">`;
+      h+=`<div class="section-title"><h2>🔤 英语每日听（听力为主 · 跟读 · 口语）</h2></div>`;
+      h+=`<div class="card-box"><div class="h-tag">👂 听力训练（听音选句）</div><h3>听标准音，选出你听到的句子</h3>`;
+      listen.forEach((it,i)=>{
+        const pool=shuffle(arr.filter(x=>x.w!==it.w)).slice(0,2).map(x=>x.s).concat(it.s);
+        const sopts=shuffle(pool);
+        h+=`<div class="q-item"><div class="q-text"><span class="q-num">${i+1}.</span><span class="q-body">听发音，选出你听到的句子：</span><button class="speak-btn" onclick="speakText('第${i+1}题，先点播放，听英语发音，再从下面选出你听到的那个句子。','zh-CN')">🔊 题干</button><button class="speak-btn" onclick="speakText('${esc(it.s)}','en-US')">🔊 播放</button></div><div class="q-options">`;
+        sopts.forEach((o,j)=>{ h+=`<button class="opt" data-val="${esc(o)}" onclick="checkAnswer(this,'${esc(o)}','${esc(it.s)}','英语·听力',this.parentElement.parentElement,'听音选句，注意关键词。')"><span class="opt-lab">${OPT_LETTERS[j]||'·'}</span>${o}</button>`; });
+        h+=`</div>`+mqExplain(it.s, `你听到的是：「${it.sc}」。`, sopts, 'en-US')+`</div>`;
+      });
+      h+=allAnswersBtn()+`</div>`;
+      h+=`<div class="card-box"><div class="h-tag">🎤 口语跟读</div><h3>跟读下面句子，练习发音</h3>`;
+      listen.forEach((it,i)=>{
+        h+=`<div class="en-word"><div><div class="en-text">${it.s}</div><div class="en-mean">${it.sc}</div><div class="repeat-fb" id="fb-d${i}"></div></div><div class="en-btns"><button class="speak-btn" onclick="speakEnCn('${esc(it.s)}','${esc(it.sc)}')">🔊 英+中</button><button class="speak-btn" onclick="speakText('${esc(it.s)}','en-US')">🔊</button><button class="mic-btn" id="mic-d${i}" onclick="startRepeat('d${i}','${esc(it.s)}')">🎤</button></div></div>`;
+      });
+      h+=`<div class="meaning" style="margin-top:6px;">点 🔊 听标准发音，点 🎤 录音跟读，系统会对比你的发音。</div></div>`;
+      h+=`</div>`;
+      ph.innerHTML=h;
+    }
+
+    // ===================== 近期计划（可增删改 Todo） =====================
+    function renderPlans(){
+      const ph=document.getElementById('page-plans');
+      ph.style.alignItems='stretch'; ph.style.textAlign='left'; ph.style.overflowY='auto'; ph.style.padding='24px 28px 100px';
+      const code=localStorage.getItem('xx_sync_code')||'';
+      let h=`<div style="max-width:680px;width:100%;margin:0 auto;">`;
+      h+=`<div class="section-title"><h2>📌 近期计划</h2><span class="task-count">${plans.filter(p=>p.done).length}/${plans.length}</span></div>`;
+      // 云同步面板
+      h+=`<div class="card-box"><div class="h-tag">☁️ 云同步（手机电脑共用同一份数据）</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+          <input id="sync-server" value="${esc(syncUrl())}" placeholder="同步服务器地址（可留空=本机/局域网）" style="flex:1;min-width:200px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;">
+          <button class="sync-btn" onclick="saveSyncServer()">保存地址</button>
+          <button class="sync-btn ghost" onclick="testSync()">测试连接</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+          <input id="sync-code" value="${esc(code)}" placeholder="设置同步码（两端一致）" style="flex:1;min-width:160px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;">
+          <button class="sync-btn" onclick="saveSyncCode()">保存</button>
+          <button class="sync-btn" onclick="syncPush()">⬆ 上传</button>
+          <button class="sync-btn" onclick="syncPull()">⬇ 下载</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="auto-sync" ${autoSyncOn()?'checked':''} onchange="toggleAutoSync()"> 自动同步（改动后自动上传·定时下载）</label>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+          <button class="sync-btn ghost" onclick="exportBackup()">⤓ 导出备份</button>
+          <button class="sync-btn ghost" onclick="importBackup()">⤒ 导入备份</button>
+        </div>
+        <div id="cloud-status" style="font-size:12px;color:var(--text-secondary);line-height:1.6;">同步方式：① 家里电脑运行 server（双击 start.bat），手机电脑用同一局域网地址打开即自动同步；② 或填写一个自建/云服务器地址。也可随时用「导出/导入备份」手动备份。当前默认地址为静态托管，无法自动同步，请按上面方式设置。</div>
+      </div>`;
+      // 添加
+      h+=`<div style="display:flex;gap:10px;margin:16px 0;">
+        <input id="plan-input" placeholder="添加计划，如：本周背会 20 个英语单词" onkeydown="if(event.key==='Enter')addPlan()" style="flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:15px;">
+        <button class="sync-btn" onclick="addPlan()">添加</button>
+      </div>`;
+      if(plans.length===0) h+=`<div class="empty-state"><div class="emoji">📌</div><div>还没有计划，添加你的学习目标吧</div></div>`;
+      else{
+        h+=`<div class="task-list">`;
+        plans.forEach(p=>{
+          h+=`<div class="task-item ${p.done?'completed':''}" style="cursor:default;">
+            <div class="task-checkbox" onclick="togglePlan(${p.id})">${p.done?'✓':''}</div>
+            <div class="task-content"><div class="task-name">${esc(p.text)}</div></div>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+              <button class="wb-del" onclick="editPlan(${p.id})">✎</button>
+              <button class="wb-del" onclick="delPlan(${p.id})" style="color:var(--danger)">🗑</button>
+            </div>
+          </div>`;
+        });
+        h+=`</div>`;
+      }
+      h+=`</div>`;
+      ph.innerHTML=h;
+    }
+    function addPlan(){ const inp=document.getElementById('plan-input'); const v=inp.value.trim(); if(!v){ showToast('请输入计划内容'); return; } plans.push({id:Date.now(),text:v,done:false}); savePlans(); renderPlans(); showToast('已添加计划'); }
+    function togglePlan(id){ const p=plans.find(x=>x.id===id); if(!p) return; p.done=!p.done; savePlans(); renderPlans(); }
+    function editPlan(id){ const p=plans.find(x=>x.id===id); if(!p) return; const v=prompt('修改计划：',p.text); if(v===null) return; const t=v.trim(); if(!t) return; p.text=t; savePlans(); renderPlans(); }
+    function delPlan(id){ if(!confirmDelete()) return; plans=plans.filter(x=>x.id!==id); savePlans(); renderPlans(); }
+
+    // ===================== 云同步（可指向自建/云服务器） =====================
+    function syncUrl(){ try{ return (localStorage.getItem('xx_sync_url')||'').trim(); }catch(e){ return ''; } }
+    function autoSyncOn(){ try{ return localStorage.getItem('xx_autosync')==='1'; }catch(e){ return false; } }
+    let _syncBase=null, isSyncing=false;
+    function syncBase(){
+      if(_syncBase!==null) return _syncBase;
+      let base=syncUrl();
+      if(!base){ try{ base=location.origin+(location.pathname.replace(/\/[^/]*$/,'')||'/'); }catch(e){ base='/'; } }
+      if(base && !base.endsWith('/')) base+='/';
+      _syncBase=base||'/';
+      return _syncBase;
+    }
+    function getSyncCode(){ const c=(localStorage.getItem('xx_sync_code')||'').trim(); return c; }
+    function saveSyncServer(){ const inp=document.getElementById('sync-server'); const v=(inp.value||'').trim(); try{ localStorage.setItem('xx_sync_url',v); }catch(e){} _syncBase=null; showToast(v?'☁️ 已保存服务器地址':'已恢复默认（本机/局域网）'); }
+    function saveSyncCode(){ const inp=document.getElementById('sync-code'); const v=(inp.value||'').trim(); if(!v){ showToast('同步码不能为空'); return; } try{ localStorage.setItem('xx_sync_code',v); }catch(e){} showToast('☁️ 同步码已保存'); }
+    function toggleAutoSync(){ const el=document.getElementById('auto-sync'); const on=!!(el&&el.checked); try{ localStorage.setItem('xx_autosync',on?'1':'0'); }catch(e){} if(on){ startAutoSync(); setCloudStatus('🔄 自动同步已开启（'+syncBase()+'）'); } else { stopAutoSync(); setCloudStatus('⏸ 自动同步已关闭'); } }
+    function collectAll(){ return {v:4,grade:userGrade,tasks:tasksData,wrong:wrongBook,rewards:rewards,flags:dailyFlags,checkin:checkinLog,plans:plans,stats:answerStats}; }
+    function applyAll(d){ if(!d||typeof d!=='object') return false; if(d.grade) userGrade=d.grade; if(d.tasks) tasksData=d.tasks; if(Array.isArray(d.wrong)) wrongBook=d.wrong; if(Array.isArray(d.rewards)) rewards=d.rewards; if(d.flags) dailyFlags=d.flags; if(d.checkin) checkinLog=d.checkin; if(Array.isArray(d.plans)) plans=d.plans; if(d.stats&&typeof d.stats==='object') answerStats=d.stats; saveAll(); return true; }
+    function setCloudStatus(t){ const el=document.getElementById('cloud-status'); if(el) el.textContent=t; }
+    async function apiJSON(method,body){
+      const url=syncBase()+'api/sync?code='+encodeURIComponent(getSyncCode()||'__test__');
+      const opt={method:method}; if(body!==undefined) opt.body=JSON.stringify(body);
+      const r=await fetch(url,opt);
+      const ct=(r.headers.get('content-type')||'').toLowerCase();
+      const isJson=ct.indexOf('json')>=0;
+      let data=null; if(isJson){ try{ data=await r.json(); }catch(e){} }
+      return {ok:r.ok, isJson:isJson, data:data};
+    }
+    async function testSync(){
+      if(!getSyncCode()){ setCloudStatus('⚠️ 请先设置「同步码」再测试连接'); return; }
+      setCloudStatus('🔌 正在测试连接（'+syncBase()+'）…');
+      const res=await apiJSON('GET');
+      if(res.ok && res.isJson) setCloudStatus('✅ 已连接到同步服务器（'+syncBase()+'）');
+      else setCloudStatus('⚠️ 未连接到同步服务器：请确认 server 正在运行、地址正确。当前默认地址 '+syncBase()+' 为静态托管，无法自动同步。');
+    }
+    async function syncPush(silent){
+      const code=getSyncCode(); if(!code){ if(!silent){ showToast('请先设置同步码'); } setCloudStatus('⚠️ 请先设置同步码'); return; }
+      if(!silent) setCloudStatus('⬆ 正在上传到云端…');
+      try{
+        const res=await apiJSON('POST',collectAll());
+        if(res.ok && res.isJson){ setCloudStatus('✅ 已上传到云端（'+getToday()+'）'); if(!silent) showToast('☁️ 已上传到云端'); }
+        else setCloudStatus('⚠️ 云端暂不可用，请用「导出/导入备份」手动同步');
+      }catch(e){ setCloudStatus('⚠️ 云端暂不可用，请用「导出/导入备份」手动同步'); }
+    }
+    async function syncPull(silent){
+      const code=getSyncCode(); if(!code){ if(!silent){ showToast('请先设置同步码'); } setCloudStatus('⚠️ 请先设置同步码'); return; }
+      if(!silent) setCloudStatus('⬇ 正在从云端下载…');
+      try{
+        const res=await apiJSON('GET');
+        if(!res.ok || !res.isJson){ setCloudStatus('⚠️ 云端暂不可用，请用导出/导入手动同步'); return; }
+        const data=res.data||{};
+        if(data && data.tasks){
+          isSyncing=true; const ok=applyAll(data); isSyncing=false;
+          if(ok){ setCloudStatus('✅ 已从云端下载并合并（'+getToday()+'）'); if(!silent) showToast('☁️ 已从云端下载'); afterSyncRender(); }
+          else setCloudStatus('⚠️ 云端数据为空');
+        } else { setCloudStatus('云端暂无数据，请先在一端上传'); if(!silent) showToast('云端暂无数据'); }
+      }catch(e){ setCloudStatus('⚠️ 云端暂不可用，请用导出/导入手动同步'); }
+    }
+    // 自动同步
+    let autoPushT=null, autoPullTimer=null;
+    function maybeAutoSync(){ if(!autoSyncOn()||isSyncing) return; clearTimeout(autoPushT); autoPushT=setTimeout(()=>{ syncPush(true); }, 1500); }
+    function startAutoSync(){ stopAutoSync(); autoPullTimer=setInterval(()=>{ syncPull(true); }, 60000); }
+    function stopAutoSync(){ if(autoPullTimer){ clearInterval(autoPullTimer); autoPullTimer=null; } }
+    function afterSyncRender(){ renderStudyHome(); if(currentPage==='plans') renderPlans(); if(currentPage==='errors') renderWrongBook(); if(currentPage==='rewards') renderRewards(); if(currentPage==='stats') renderStats(); }
+    function exportBackup(){ try{ const blob=new Blob([JSON.stringify(collectAll())],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='小学学习备份_'+getToday()+'.json'; a.click(); showToast('⤓ 已导出备份文件'); }catch(e){ showToast('导出失败'); } }
+    function importBackup(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=()=>{ const f=inp.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(applyAll(d)){ showToast('⤒ 已导入备份'); afterSyncRender(); } else showToast('导入失败：格式错误'); }catch(e){ showToast('导入失败'); } }; rd.readAsText(f); }; inp.click(); }
+
+    // ===================== 侧边栏 / 提示 =====================
+    function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.querySelector('.sidebar-backdrop').classList.toggle('show'); }
+    function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.querySelector('.sidebar-backdrop').classList.remove('show'); }
+    function installApp(){ if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; const b=document.getElementById('install-btn'); if(b) b.style.display='none'; }); } else { showToast('当前浏览器请在菜单中选择「安装/添加到主屏幕」'); } }
+    let toastTimer=null;
+    function showToast(msg){ const t=document.getElementById('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200); }
+
+    // ===================== 初始化 =====================
+    let deferredPrompt=null;
+    window.addEventListener('beforeinstallprompt',(e)=>{ e.preventDefault(); deferredPrompt=e; const b=document.getElementById('install-btn'); if(b) b.style.display='inline-block'; });
+    window.addEventListener('DOMContentLoaded', () => {
+      loadAll();
+      const code=getSyncCode();
+      if(code){
+        syncPull().then(()=>{ renderStudyHome(); if(autoSyncOn()) startAutoSync(); });
+      } else {
+        renderStudyHome();
+      }
+    });
+  </script>
+</body>
+</html>
