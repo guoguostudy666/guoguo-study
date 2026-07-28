@@ -263,6 +263,7 @@
         <div class="nav-item" data-page="science" onclick="switchPage('science')"><span class="nav-icon">🔬</span><span>科学小实验</span></div>
         <div class="nav-item" data-page="stats" onclick="switchPage('stats')"><span class="nav-icon">📊</span><span>打卡统计</span></div>
         <div class="nav-item" data-page="plans" onclick="switchPage('plans')"><span class="nav-icon">📌</span><span>近期计划</span></div>
+        <div class="nav-item" data-page="sync" onclick="switchPage('sync')"><span class="nav-icon">☁️</span><span>云同步</span></div>
       </nav>
       <div class="sidebar-footer">本地保存 · 云端可同步</div>
     </aside>
@@ -288,6 +289,7 @@
       <div class="placeholder-page" id="page-brain"><div class="big-emoji">🧠</div><h2>脑筋急转弯</h2><p>每天两个趣味小谜题，动动脑筋点一点答案。</p></div>
       <div class="placeholder-page" id="page-science"><div class="big-emoji">🔬</div><h2>科学小实验</h2><p>每天一个简易小实验，年级越高越有挑战，原理解析可点 🔊 听。</p></div>
       <div class="placeholder-page" id="page-plans"><div class="big-emoji">📌</div><h2>近期计划</h2><p>制定阶段学习目标与复习安排。</p></div>
+      <div class="placeholder-page" id="page-sync"></div>
     </main>
   </div>
 
@@ -327,7 +329,8 @@
           {name:'数学思维小题', type:'math_think'},
           {name:'错题订正', type:'math_wrong'},
           {name:'生活中的数学', type:'math_life'},
-          {name:'奥数思维（每日一题）', type:'math_olympiad'}
+          {name:'奥数思维（每日一题）', type:'math_olympiad'},
+          {name:'算法集锦', type:'math_algo'}
         ]
       },
       english: {
@@ -699,6 +702,53 @@
          {q:'“我劝天公重抖擞，不拘一格降人才”表达了诗人怎样的愿望？',idea:'诗人希望社会变革，打破沉闷，涌现人才。',ans:'表达了诗人希望国家变革图强、重视人才的强烈愿望。'}]
     };
     // 奥数/加难度思维题库（每日一题，含解题思路 + 答案，点击显示）
+    const ALGO = {
+      1:[
+        {name:'凑十法', method:'看到 9 就和 1 凑成 10，先把能凑十的算完，剩下几就是十几。', q:'8 + 6 = ?', a:'14', e:'把 6 分成 2 和 4，8+2=10，10+4=14。'},
+        {name:'破十法', method:'被减数的个位不够减时，从十位借 1 当 10，先减再加。', q:'13 - 5 = ?', a:'8', e:'13 分成 10 和 3，10-5=5，5+3=8。'},
+        {name:'接着数', method:'加法就是往后数，减法就是往前数，一个一个数出来。', q:'7 + 3 = ?', a:'10', e:'从 7 往后数 3 个：8、9、10，所以是 10。'}
+      ],
+      2:[
+        {name:'进位加法', method:'个位相加满十，就向十位进 1，十位再加进上来的 1。', q:'28 + 15 = ?', a:'43', e:'先算个位 8+5=13，个位写 3、向十位进 1；再算十位 2+1+1(进位)=4，合起来 43。'},
+        {name:'退位减法', method:'个位不够减，向十位借 1 当 10，借来后再减。', q:'42 - 17 = ?', a:'25', e:'个位 2 减 7 不够，向十位借 1 当 10，12-7=5；十位剩 3 减 1=2，合起来 25。'},
+        {name:'乘加先乘', method:'一道题里既有乘法又有加减，先算乘法，再算加减。', q:'3 × 4 + 2 = ?', a:'14', e:'先算 3×4=12，再算 12+2=14。'}
+      ],
+      3:[
+        {name:'两位数乘一位数', method:'把两位数拆成几十和几，分别去乘，再把两次的积相加。', q:'23 × 3 = ?', a:'69', e:'20×3=60，3×3=9，60+9=69。'},
+        {name:'除法想乘法', method:'算除法时，想哪句乘法口诀能凑出被除数。', q:'48 ÷ 6 = ?', a:'8', e:'想六八四十八，所以 48÷6=8。'},
+        {name:'长方形周长', method:'长方形有两组相等的边，周长 =（长 + 宽）× 2。', q:'长 5 厘米、宽 3 厘米的长方形，周长是多少？', a:'16 厘米', e:'(5+3)×2 = 8×2 = 16（厘米）。'}
+      ],
+      4:[
+        {name:'加法凑整', method:'加数交换位置、或先把能凑成整十整百的数相加，和不变，算起来更简便。', q:'37 + 48 + 63 = ?', a:'148', e:'先算 37+63=100，再加 48 得 148，比硬加快很多。'},
+        {name:'多位数乘一位数', method:'多位数乘一位数，从个位起一位一位乘，满几十就向前一位进几。', q:'124 × 2 = ?', a:'248', e:'个位 4×2=8，十位 2×2=4，百位 1×2=2，得 248。'},
+        {name:'长方形面积', method:'长方形的面积 = 长 × 宽。', q:'长 6 米、宽 4 米的长方形，面积是多少？', a:'24 平方米', e:'6×4=24（平方米）。'}
+      ],
+      5:[
+        {name:'小数加减对齐', method:'小数加减要把小数点对齐（也就是相同数位对齐），再按整数方法算。', q:'3.5 + 2.8 = ?', a:'6.3', e:'小数点对齐：3.5+2.8，5+8=13 进 1，3+2+1=6，得 6.3。'},
+        {name:'乘法分配律', method:'a×(b+c) = a×b + a×c，把括号拆开分别乘，常能凑整简便。', q:'25 × (4 + 8) = ?', a:'300', e:'25×4=100，25×8=200，100+200=300。'},
+        {name:'同分母分数加减', method:'分母相同的分数相加减，分母不变，只把分子相加减。', q:'3/7 + 2/7 = ?', a:'5/7', e:'分母 7 不变，分子 3+2=5，得 5/7。'}
+      ],
+      6:[
+        {name:'百分数与小数互化', method:'百分数化小数：去掉百分号，小数点左移两位；小数化百分数反之。', q:'0.35 = ?%', a:'35%', e:'0.35 小数点右移两位、加百分号，得 35%。'},
+        {name:'圆周长公式', method:'圆的周长 = π × 直径，也等于 2 × π × 半径（C = πd = 2πr）。', q:'直径 10 厘米的圆，周长约是多少？（π 取 3.14）', a:'31.4 厘米', e:'C = πd = 3.14 × 10 = 31.4（厘米）。'},
+        {name:'解方程移项', method:'等式两边都加、减、乘、除同一个数（除数不为 0），等式仍成立；把未知数留在一边。', q:'x + 7 = 20，x = ?', a:'13', e:'两边都减 7：x = 20 - 7 = 13。'}
+      ]
+    };
+    function mathAlgoView(){
+      const list=(ALGO[userGrade]||ALGO[1]).slice();
+      let h=`<div style="max-width:680px;width:100%;margin:0 auto;">`;
+      h+=`<div class="section-title"><h2>🧮 算法集锦（${userGrade}年级 · 教材同步）</h2><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">把课本里的计算窍门和公式整理成几招，每种配一道同步习题，点 🔊 可听讲解和题目。</div></div>`;
+      list.forEach((it,idx)=>{
+        h+=`<div class="card-box"><div class="h-tag">🧮 招式 ${idx+1}：${it.name}</div>`;
+        h+=`<div class="meaning"><b>📖 怎么算：</b>${it.method} <button class="speak-btn" onclick="speakText('${esc(it.method)}','zh-CN')">🔊 听讲解</button></div>`;
+        h+=`<div class="q-item"><div class="q-text"><span class="q-body">${it.q}</span><button class="speak-btn" onclick="speakMath('${esc(it.q)}')">🔊 读题</button></div></div>`;
+        h+=`<div class="solution-box"><button class="solution-btn" onclick="this.nextElementSibling.classList.toggle('show');this.textContent=this.nextElementSibling.classList.contains('show')?'隐藏答案':'显示答案'">显示答案</button>
+          <div class="solution-content"><div><b>✅ 答案：</b>${it.a} <button class="speak-btn" onclick="speakMath('${esc(it.a)}')">🔊</button></div>
+          <div style="margin-top:6px;"><b>💡 解析：</b>${it.e} <button class="speak-btn" onclick="speakText('${esc(it.e)}','zh-CN')">🔊</button></div></div></div>`;
+      });
+      h+=`</div>`;
+      return h;
+    }
     const MATH_OLYMPIAD = {
       1:[{q:'小明和小红共有 12 支铅笔，小明给小红 2 支后，两人一样多。原来小明有几支？',idea:'给完后两人一样多，说明每人 6 支；小明给出去 2 支后才是 6 支，所以原来要加回来。',ans:'原来小明有 8 支。（12÷2=6，6+2=8）'},
          {q:'把 10 个苹果放到 3 个盘子里，每个盘子至少放 1 个，其中有一个盘子最多放几个？',idea:'要让一个盘子尽量多，其他两个盘子尽量少。',ans:'最多放 8 个。其他两个盘子各放 1 个，10-1-1=8。'}],
@@ -983,6 +1033,7 @@
         if(page==='brain') renderBrain();
         if(page==='science') renderScience();
         if(page==='plans') renderPlans();
+        if(page==='sync') renderSync();
       }
       if(window.innerWidth<=768) closeSidebar();
     }
@@ -1144,6 +1195,7 @@
         if(type==='math_wrong') return mathWrongView();
         if(type==='math_life') return mathLifeView();
         if(type==='math_olympiad') return mathOlympiadView();
+        if(type==='math_algo') return mathAlgoView();
       }
       if(sub==='english'){
         if(type==='en_word') return enWordView();
@@ -1971,28 +2023,6 @@
       const code=localStorage.getItem('xx_sync_code')||'';
       let h=`<div style="max-width:680px;width:100%;margin:0 auto;">`;
       h+=`<div class="section-title"><h2>📌 近期计划</h2><span class="task-count">${plans.filter(p=>p.done).length}/${plans.length}</span></div>`;
-      // 云同步面板
-      h+=`<div class="card-box"><div class="h-tag">☁️ 云同步（手机电脑共用同一份数据）</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
-          <input id="gh-token" value="${esc(ghToken())}" type="password" placeholder="GitHub 令牌（需 repo 权限）" style="flex:1;min-width:200px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;">
-          <input id="gh-repo" value="${esc(ghRepo())}" placeholder="仓库 owner/repo" style="flex:1;min-width:160px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;">
-          <button class="sync-btn" onclick="saveGh()">保存</button>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
-          <input id="sync-code" value="${esc(code)}" placeholder="设置同步码（两端一致）" style="flex:1;min-width:160px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;">
-          <button class="sync-btn" onclick="saveSyncCode()">保存</button>
-          <button class="sync-btn" onclick="syncPush()">⬆ 上传</button>
-          <button class="sync-btn" onclick="syncPull()">⬇ 下载</button>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="auto-sync" ${autoSyncOn()?'checked':''} onchange="toggleAutoSync()"> 自动同步（改动后自动上传·每60秒下载一次）</label>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-          <button class="sync-btn ghost" onclick="exportBackup()">⤓ 导出备份</button>
-          <button class="sync-btn ghost" onclick="importBackup()">⤒ 导入备份</button>
-        </div>
-        <div id="cloud-status" style="font-size:12px;color:var(--text-secondary);line-height:1.6;">云同步说明：数据保存在你自己的 GitHub 仓库 <b>guoguostudy666/guoguo-study</b> 的 <b>sync/同步码.json</b> 文件里，永久在线、随时可同步。① 全家手机/电脑填<b>同一个同步码</b>即可共用一份进度；② GitHub 令牌仅需填写一次（建议用仅限本仓库的细粒度令牌）；③ 也可随时用「导出/导入备份」手动备份。令牌仅存本机，不会上传。</div>
-      </div>`;
       // 添加
       h+=`<div style="display:flex;gap:10px;margin:16px 0;">
         <input id="plan-input" placeholder="添加计划，如：本周背会 20 个英语单词" onkeydown="if(event.key==='Enter')addPlan()" style="flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:15px;">
@@ -2021,6 +2051,35 @@
     function editPlan(id){ const p=plans.find(x=>x.id===id); if(!p) return; const v=prompt('修改计划：',p.text); if(v===null) return; const t=v.trim(); if(!t) return; p.text=t; savePlans(); renderPlans(); }
     function delPlan(id){ if(!confirmDelete()) return; plans=plans.filter(x=>x.id!==id); savePlans(); renderPlans(); }
 
+    function renderSync(){
+      const ph=document.getElementById('page-sync');
+      ph.style.alignItems='stretch'; ph.style.textAlign='left'; ph.style.overflowY='auto'; ph.style.padding='24px 28px 100px';
+      const code=getSyncCode()||'';
+      let h=`<div style="max-width:680px;width:100%;margin:0 auto;">`;
+      h+=`<div class="section-title"><h2>☁️ 云同步（手机电脑共用同一份数据）</h2></div>`;
+      h+=`<div class="card-box"><div class="h-tag">☁️ 云同步（手机电脑共用同一份数据）</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+          <input id="gh-token" value="${esc(ghToken())}" type="password" placeholder="GitHub 令牌（需 repo 权限）" style="flex:1;min-width:200px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;">
+          <input id="gh-repo" value="${esc(ghRepo())}" placeholder="仓库 owner/repo" style="flex:1;min-width:160px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;">
+          <button class="sync-btn" onclick="saveGh()">保存</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+          <input id="sync-code" value="${esc(code)}" placeholder="设置同步码（两端一致）" style="flex:1;min-width:160px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;">
+          <button class="sync-btn" onclick="saveSyncCode()">保存</button>
+          <button class="sync-btn" onclick="syncPush()">⬆ 上传</button>
+          <button class="sync-btn" onclick="syncPull()">⬇ 下载</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="auto-sync" ${autoSyncOn()?'checked':''} onchange="toggleAutoSync()"> 自动同步（改动后自动上传·每60秒下载一次）</label>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+          <button class="sync-btn ghost" onclick="exportBackup()">⤓ 导出备份</button>
+          <button class="sync-btn ghost" onclick="importBackup()">⤒ 导入备份</button>
+        </div>
+        <div id="cloud-status" style="font-size:12px;color:var(--text-secondary);line-height:1.6;">云同步说明：数据保存在你自己的 GitHub 仓库 <b>guoguostudy666/guoguo-study</b> 的 <b>sync/同步码.json</b> 文件里，永久在线、随时可同步。① 全家手机/电脑填<b>同一个同步码</b>即可共用一份进度；② GitHub 令牌仅需填写一次（建议用仅限本仓库的细粒度令牌）；③ 也可随时用「导出/导入备份」手动备份。令牌仅存本机，不会上传。</div>
+      </div>`;
+      ph.innerHTML=h;
+    }
     // ===================== 云同步（直连 GitHub 仓库，永久在线、零服务器） =====================
     let isSyncing=false;
     function ghToken(){ try{ return (localStorage.getItem('xx_gh_token')||'').trim(); }catch(e){ return ''; } }
@@ -2088,7 +2147,7 @@
     function maybeAutoSync(){ if(!autoSyncOn()||isSyncing) return; clearTimeout(autoPushT); autoPushT=setTimeout(()=>{ syncPush(true); }, 1500); }
     function startAutoSync(){ stopAutoSync(); autoPullTimer=setInterval(()=>{ syncPull(true); }, 60000); }
     function stopAutoSync(){ if(autoPullTimer){ clearInterval(autoPullTimer); autoPullTimer=null; } }
-    function afterSyncRender(){ renderStudyHome(); if(currentPage==='plans') renderPlans(); if(currentPage==='errors') renderWrongBook(); if(currentPage==='rewards') renderRewards(); if(currentPage==='stats') renderStats(); }
+    function afterSyncRender(){ renderStudyHome(); if(currentPage==='plans') renderPlans(); if(currentPage==='errors') renderWrongBook(); if(currentPage==='rewards') renderRewards(); if(currentPage==='stats') renderStats(); if(currentPage==='sync') renderSync(); }
     function exportBackup(){ try{ const blob=new Blob([JSON.stringify(collectAll())],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='小学学习备份_'+getToday()+'.json'; a.click(); showToast('📤 已导出备份文件'); }catch(e){ showToast('导出失败'); } }
     function importBackup(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=()=>{ const f=inp.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(applyAll(d,true)){ showToast('📥 已导入备份'); afterSyncRender(); } else showToast('导入失败：格式错误'); }catch(e){ showToast('导入失败'); } }; rd.readAsText(f); }; inp.click(); }
     // ===================== 侧边栏 / 提示 =====================
