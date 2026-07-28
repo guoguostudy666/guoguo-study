@@ -1974,9 +1974,9 @@
       // 云同步面板
       h+=`<div class="card-box"><div class="h-tag">☁️ 云同步（手机电脑共用同一份数据）</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
-          <input id="sync-server" value="${esc(syncUrl())}" placeholder="同步服务器地址（可留空=本机/局域网）" style="flex:1;min-width:200px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;">
-          <button class="sync-btn" onclick="saveSyncServer()">保存地址</button>
-          <button class="sync-btn ghost" onclick="testSync()">测试连接</button>
+          <input id="gh-token" value="${esc(ghToken())}" type="password" placeholder="GitHub 令牌（需 repo 权限）" style="flex:1;min-width:200px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;">
+          <input id="gh-repo" value="${esc(ghRepo())}" placeholder="仓库 owner/repo" style="flex:1;min-width:160px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;">
+          <button class="sync-btn" onclick="saveGh()">保存</button>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
           <input id="sync-code" value="${esc(code)}" placeholder="设置同步码（两端一致）" style="flex:1;min-width:160px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;">
@@ -1985,13 +1985,13 @@
           <button class="sync-btn" onclick="syncPull()">⬇ 下载</button>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="auto-sync" ${autoSyncOn()?'checked':''} onchange="toggleAutoSync()"> 自动同步（改动后自动上传·定时下载）</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="auto-sync" ${autoSyncOn()?'checked':''} onchange="toggleAutoSync()"> 自动同步（改动后自动上传·每60秒下载一次）</label>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
           <button class="sync-btn ghost" onclick="exportBackup()">⤓ 导出备份</button>
           <button class="sync-btn ghost" onclick="importBackup()">⤒ 导入备份</button>
         </div>
-        <div id="cloud-status" style="font-size:12px;color:var(--text-secondary);line-height:1.6;">同步方式：① 家里电脑运行 server（双击 start.bat），手机电脑用同一局域网地址打开即自动同步；② 或填写一个自建/云服务器地址。也可随时用「导出/导入备份」手动备份。当前默认地址为静态托管，无法自动同步，请按上面方式设置。</div>
+        <div id="cloud-status" style="font-size:12px;color:var(--text-secondary);line-height:1.6;">云同步说明：数据保存在你自己的 GitHub 仓库 <b>guoguostudy666/guoguo-study</b> 的 <b>sync/同步码.json</b> 文件里，永久在线、随时可同步。① 全家手机/电脑填<b>同一个同步码</b>即可共用一份进度；② GitHub 令牌仅需填写一次（建议用仅限本仓库的细粒度令牌）；③ 也可随时用「导出/导入备份」手动备份。令牌仅存本机，不会上传。</div>
       </div>`;
       // 添加
       h+=`<div style="display:flex;gap:10px;margin:16px 0;">
@@ -2021,63 +2021,67 @@
     function editPlan(id){ const p=plans.find(x=>x.id===id); if(!p) return; const v=prompt('修改计划：',p.text); if(v===null) return; const t=v.trim(); if(!t) return; p.text=t; savePlans(); renderPlans(); }
     function delPlan(id){ if(!confirmDelete()) return; plans=plans.filter(x=>x.id!==id); savePlans(); renderPlans(); }
 
-    // ===================== 云同步（可指向自建/云服务器） =====================
-    function syncUrl(){ try{ return (localStorage.getItem('xx_sync_url')||'').trim(); }catch(e){ return ''; } }
-    function autoSyncOn(){ try{ return localStorage.getItem('xx_autosync')==='1'; }catch(e){ return false; } }
-    let _syncBase=null, isSyncing=false;
-    function syncBase(){
-      if(_syncBase!==null) return _syncBase;
-      let base=syncUrl();
-      if(!base){ try{ base=location.origin+(location.pathname.replace(/\/[^/]*$/,'')||'/'); }catch(e){ base='/'; } }
-      if(base && !base.endsWith('/')) base+='/';
-      _syncBase=base||'/';
-      return _syncBase;
+    // ===================== 云同步（直连 GitHub 仓库，永久在线、零服务器） =====================
+    let isSyncing=false;
+    function ghToken(){ try{ return (localStorage.getItem('xx_gh_token')||'').trim(); }catch(e){ return ''; } }
+    function ghRepo(){ try{ return (localStorage.getItem('xx_gh_repo')||'guoguostudy666/guoguo-study').trim(); }catch(e){ return 'guoguostudy666/guoguo-study'; } }
+    function ghPath(code){ return 'sync/'+encodeURIComponent(code||'default')+'.json'; }
+    function ghApi(path, method, body){
+      const parts=ghRepo().split('/'); const owner=parts[0]||'guoguostudy666'; const repo=parts[1]||'guoguo-study';
+      const url='https://api.github.com/repos/'+owner+'/'+repo+'/contents/'+path;
+      const headers={'Authorization':'Bearer '+ghToken(),'Accept':'application/vnd.github+json','User-Agent':'guoguo-sync','Content-Type':'application/json'};
+      const opt={method:method,headers:headers}; if(body!==undefined) opt.body=JSON.stringify(body);
+      return fetch(url,opt);
+    }
+    async function ghGetObj(code){
+      try{
+        const r=await ghApi(ghPath(code),'GET'); if(!r.ok) return {ok:false,status:r.status};
+        const j=await r.json(); const raw=atob((j.content||'').replace(/\s/g,''));
+        const text=decodeURIComponent(escape(raw));
+        return {ok:true, data:JSON.parse(text), sha:j.sha};
+      }catch(e){ return {ok:false,status:0,err:e.message}; }
+    }
+    async function ghPutObj(code, obj, sha){
+      const content=btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+      const body={message:'sync '+code+' '+new Date().toISOString(), content:content}; if(sha) body.sha=sha;
+      try{ const r=await ghApi(ghPath(code),'PUT',body); return {ok:r.ok,status:r.status}; }catch(e){ return {ok:false,status:0,err:e.message}; }
     }
     function getSyncCode(){ const c=(localStorage.getItem('xx_sync_code')||'').trim(); return c; }
-    function saveSyncServer(){ const inp=document.getElementById('sync-server'); const v=(inp.value||'').trim(); try{ localStorage.setItem('xx_sync_url',v); }catch(e){} _syncBase=null; showToast(v?'☁️ 已保存服务器地址':'已恢复默认（本机/局域网）'); }
+    function syncTs(){ try{ return JSON.parse(localStorage.getItem('xx_sync_ts')||'0'); }catch(e){ return 0; } }
+    function setSyncTs(t){ try{ localStorage.setItem('xx_sync_ts',String(t)); }catch(e){} }
+    function autoSyncOn(){ try{ return localStorage.getItem('xx_autosync')==='1'; }catch(e){ return false; } }
+    function saveGh(){ const tk=document.getElementById('gh-token'); const rp=document.getElementById('gh-repo'); if(tk) try{ localStorage.setItem('xx_gh_token',(tk.value||'').trim()); }catch(e){} if(rp) try{ localStorage.setItem('xx_gh_repo',(rp.value||'').trim()||'guoguostudy666/guoguo-study'); }catch(e){} showToast('☁️ 已保存 GitHub 设置'); }
     function saveSyncCode(){ const inp=document.getElementById('sync-code'); const v=(inp.value||'').trim(); if(!v){ showToast('同步码不能为空'); return; } try{ localStorage.setItem('xx_sync_code',v); }catch(e){} showToast('☁️ 同步码已保存'); }
-    function toggleAutoSync(){ const el=document.getElementById('auto-sync'); const on=!!(el&&el.checked); try{ localStorage.setItem('xx_autosync',on?'1':'0'); }catch(e){} if(on){ startAutoSync(); setCloudStatus('🔄 自动同步已开启（'+syncBase()+'）'); } else { stopAutoSync(); setCloudStatus('⏸ 自动同步已关闭'); } }
-    function collectAll(){ return {v:4,grade:userGrade,tasks:tasksData,wrong:wrongBook,rewards:rewards,flags:dailyFlags,checkin:checkinLog,plans:plans,stats:answerStats}; }
-    function applyAll(d){ if(!d||typeof d!=='object') return false; if(d.grade) userGrade=d.grade; if(d.tasks) tasksData=d.tasks; if(Array.isArray(d.wrong)) wrongBook=d.wrong; if(Array.isArray(d.rewards)) rewards=d.rewards; if(d.flags) dailyFlags=d.flags; if(d.checkin) checkinLog=d.checkin; if(Array.isArray(d.plans)) plans=d.plans; if(d.stats&&typeof d.stats==='object') answerStats=d.stats; saveAll(); return true; }
+    function toggleAutoSync(){ const el=document.getElementById('auto-sync'); const on=!!(el&&el.checked); try{ localStorage.setItem('xx_autosync',on?'1':'0'); }catch(e){} if(on){ startAutoSync(); setCloudStatus('🔄 自动同步已开启'); } else { stopAutoSync(); setCloudStatus('⏸ 自动同步已关闭'); } }
+    function collectAll(){ return {v:4, grade:userGrade, tasks:tasksData, wrong:wrongBook, rewards:rewards, flags:dailyFlags, checkin:checkinLog, plans:plans, stats:answerStats, savedAt:Date.now()}; }
+    function applyAll(d, force){ if(!d||typeof d!=='object') return false; const localTs=syncTs(); const remoteTs=d.savedAt||0; if(!force && remoteTs<=localTs) return false; if(d.grade) userGrade=d.grade; if(d.tasks) tasksData=d.tasks; if(Array.isArray(d.wrong)) wrongBook=d.wrong; if(Array.isArray(d.rewards)) rewards=d.rewards; if(d.flags) dailyFlags=d.flags; if(d.checkin) checkinLog=d.checkin; if(Array.isArray(d.plans)) plans=d.plans; if(d.stats&&typeof d.stats==='object') answerStats=d.stats; saveAll(); setSyncTs(force?Date.now():(remoteTs||Date.now())); return true; }
     function setCloudStatus(t){ const el=document.getElementById('cloud-status'); if(el) el.textContent=t; }
-    async function apiJSON(method,body){
-      const url=syncBase()+'api/sync?code='+encodeURIComponent(getSyncCode()||'__test__');
-      const opt={method:method}; if(body!==undefined) opt.body=JSON.stringify(body);
-      const r=await fetch(url,opt);
-      const ct=(r.headers.get('content-type')||'').toLowerCase();
-      const isJson=ct.indexOf('json')>=0;
-      let data=null; if(isJson){ try{ data=await r.json(); }catch(e){} }
-      return {ok:r.ok, isJson:isJson, data:data};
-    }
-    async function testSync(){
-      if(!getSyncCode()){ setCloudStatus('⚠️ 请先设置「同步码」再测试连接'); return; }
-      setCloudStatus('🔌 正在测试连接（'+syncBase()+'）…');
-      const res=await apiJSON('GET');
-      if(res.ok && res.isJson) setCloudStatus('✅ 已连接到同步服务器（'+syncBase()+'）');
-      else setCloudStatus('⚠️ 未连接到同步服务器：请确认 server 正在运行、地址正确。当前默认地址 '+syncBase()+' 为静态托管，无法自动同步。');
-    }
     async function syncPush(silent){
-      const code=getSyncCode(); if(!code){ if(!silent){ showToast('请先设置同步码'); } setCloudStatus('⚠️ 请先设置同步码'); return; }
+      const code=getSyncCode(); if(!code){ if(!silent) showToast('请先设置同步码'); setCloudStatus('⚠️ 请先设置同步码'); return; }
+      if(!ghToken()){ if(!silent) showToast('请先填写 GitHub 令牌'); setCloudStatus('⚠️ 请先在上方填写 GitHub 令牌'); return; }
       if(!silent) setCloudStatus('⬆ 正在上传到云端…');
       try{
-        const res=await apiJSON('POST',collectAll());
-        if(res.ok && res.isJson){ setCloudStatus('✅ 已上传到云端（'+getToday()+'）'); if(!silent) showToast('☁️ 已上传到云端'); }
-        else setCloudStatus('⚠️ 云端暂不可用，请用「导出/导入备份」手动同步');
-      }catch(e){ setCloudStatus('⚠️ 云端暂不可用，请用「导出/导入备份」手动同步'); }
+        const data=collectAll();
+        const ex=await ghGetObj(code); let sha=ex.ok?ex.sha:null;
+        let res=await ghPutObj(code,data,sha);
+        if(res.status===409 && sha){ const ex2=await ghGetObj(code); res=await ghPutObj(code,data,ex2.ok?ex2.sha:null); }
+        if(res.ok){ setSyncTs(data.savedAt); setCloudStatus('✅ 已上传到云端（'+getToday()+'）'); if(!silent) showToast('☁️ 已上传到云端'); }
+        else if(res.status===401) setCloudStatus('⚠️ 令牌无效或无仓库权限（需 repo 权限）');
+        else if(res.status===404) setCloudStatus('⚠️ 仓库不存在或无权限（检查令牌与仓库名 owner/repo）');
+        else setCloudStatus('⚠️ 上传失败（'+res.status+'）');
+      }catch(e){ setCloudStatus('⚠️ 云端暂不可用：'+e.message); }
     }
     async function syncPull(silent){
-      const code=getSyncCode(); if(!code){ if(!silent){ showToast('请先设置同步码'); } setCloudStatus('⚠️ 请先设置同步码'); return; }
+      const code=getSyncCode(); if(!code){ if(!silent) showToast('请先设置同步码'); setCloudStatus('⚠️ 请先设置同步码'); return; }
+      if(!ghToken()){ if(!silent) showToast('请先填写 GitHub 令牌'); setCloudStatus('⚠️ 请先在上方填写 GitHub 令牌'); return; }
       if(!silent) setCloudStatus('⬇ 正在从云端下载…');
       try{
-        const res=await apiJSON('GET');
-        if(!res.ok || !res.isJson){ setCloudStatus('⚠️ 云端暂不可用，请用导出/导入手动同步'); return; }
-        const data=res.data||{};
-        if(data && data.tasks){
-          isSyncing=true; const ok=applyAll(data); isSyncing=false;
-          if(ok){ setCloudStatus('✅ 已从云端下载并合并（'+getToday()+'）'); if(!silent) showToast('☁️ 已从云端下载'); afterSyncRender(); }
-          else setCloudStatus('⚠️ 云端数据为空');
-        } else { setCloudStatus('云端暂无数据，请先在一端上传'); if(!silent) showToast('云端暂无数据'); }
-      }catch(e){ setCloudStatus('⚠️ 云端暂不可用，请用导出/导入手动同步'); }
+        const ex=await ghGetObj(code);
+        if(!ex.ok){ setCloudStatus('⚠️ 云端暂无数据，请先在一端上传（'+ex.status+'）'); if(!silent) showToast('云端暂无数据'); return; }
+        const ok=applyAll(ex.data);
+        if(ok){ setCloudStatus('✅ 已从云端下载并合并（'+getToday()+'）'); if(!silent) showToast('☁️ 已从云端下载'); afterSyncRender(); }
+        else setCloudStatus('ℹ️ 本地已是最新，无需更新');
+      }catch(e){ setCloudStatus('⚠️ 云端暂不可用：'+e.message); }
     }
     // 自动同步
     let autoPushT=null, autoPullTimer=null;
@@ -2085,9 +2089,8 @@
     function startAutoSync(){ stopAutoSync(); autoPullTimer=setInterval(()=>{ syncPull(true); }, 60000); }
     function stopAutoSync(){ if(autoPullTimer){ clearInterval(autoPullTimer); autoPullTimer=null; } }
     function afterSyncRender(){ renderStudyHome(); if(currentPage==='plans') renderPlans(); if(currentPage==='errors') renderWrongBook(); if(currentPage==='rewards') renderRewards(); if(currentPage==='stats') renderStats(); }
-    function exportBackup(){ try{ const blob=new Blob([JSON.stringify(collectAll())],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='小学学习备份_'+getToday()+'.json'; a.click(); showToast('⤓ 已导出备份文件'); }catch(e){ showToast('导出失败'); } }
-    function importBackup(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=()=>{ const f=inp.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(applyAll(d)){ showToast('⤒ 已导入备份'); afterSyncRender(); } else showToast('导入失败：格式错误'); }catch(e){ showToast('导入失败'); } }; rd.readAsText(f); }; inp.click(); }
-
+    function exportBackup(){ try{ const blob=new Blob([JSON.stringify(collectAll())],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='小学学习备份_'+getToday()+'.json'; a.click(); showToast('📤 已导出备份文件'); }catch(e){ showToast('导出失败'); } }
+    function importBackup(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=()=>{ const f=inp.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(applyAll(d,true)){ showToast('📥 已导入备份'); afterSyncRender(); } else showToast('导入失败：格式错误'); }catch(e){ showToast('导入失败'); } }; rd.readAsText(f); }; inp.click(); }
     // ===================== 侧边栏 / 提示 =====================
     function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.querySelector('.sidebar-backdrop').classList.toggle('show'); }
     function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.querySelector('.sidebar-backdrop').classList.remove('show'); }
